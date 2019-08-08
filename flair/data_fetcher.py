@@ -328,67 +328,71 @@ class NLPTaskDataFetcher:
     @staticmethod
     def load_classification_corpus(
             data_folder: Union[str, Path],
-            train_file=None,
-            test_file=None,
-            dev_file=None,
-            use_tokenizer: bool = True) -> TaggedCorpus:
+            train_folder_name=None,
+            test_folder_name=None,
+            dev_folder_name=None,
+            use_tokenizer: bool = True,
+            dev_split_size=0.1,
+            max_seq_len=-1) -> TaggedCorpus:
         """
         Helper function to get a TaggedCorpus from text classification-formatted task data
 
         :param data_folder: base folder with the task data
-        :param train_file: the name of the train file
-        :param test_file: the name of the test file
-        :param dev_file: the name of the dev file, if None, dev data is sampled from train
+        :param train_folder_name: the name of the train file
+        :param test_folder_name: the name of the test file
+        :param dev_folder_name: the name of the dev file, if None, dev data is sampled from train
         :return: a TaggedCorpus with annotated train, dev and test data
         """
 
         if type(data_folder) == str:
             data_folder: Path = Path(data_folder)
 
-        if train_file is not None:
-            train_file = data_folder / train_file
-        if test_file is not None:
-            test_file = data_folder / test_file
-        if dev_file is not None:
-            dev_file = data_folder / dev_file
+        if train_folder_name is not None:
+            train_folder = data_folder / train_folder_name
+        if test_folder_name is not None:
+            test_folder = data_folder / test_folder_name
+        if dev_folder_name is not None:
+            dev_folder = data_folder / dev_folder_name
+        else:
+            dev_folder = None
 
         # automatically identify train / test / dev files
-        if train_file is None:
-            for file in data_folder.iterdir():
-                file_name = file.name
-                if 'train' in file_name:
-                    train_file = file
-                if 'test' in file_name:
-                    test_file = file
-                if 'dev' in file_name:
-                    dev_file = file
-                if 'testa' in file_name:
-                    dev_file = file
-                if 'testb' in file_name:
-                    test_file = file
+        if train_folder_name is None:
+            for foldr in data_folder.iterdir():
+                foldr_name = foldr.name
+                if 'train' in foldr_name:
+                    train_folder = foldr
+                if 'test' in foldr_name:
+                    test_folder = foldr
+                if 'dev' in foldr_name:
+                    dev_folder = foldr
+                if 'testa' in foldr_name:
+                    dev_folder = foldr
+                if 'testb' in foldr_name:
+                    test_folder = foldr
 
         log.info("Reading data from {}".format(data_folder))
-        log.info("Train: {}".format(train_file))
-        log.info("Dev: {}".format(dev_file))
-        log.info("Test: {}".format(test_file))
+        log.info("Train: {}".format(train_folder))
+        log.info("Dev: {}".format(dev_folder))
+        log.info("Test: {}".format(test_folder))
 
-        sentences_train: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(train_file,
+        sentences_train: List[Sentence] = NLPTaskDataFetcher.read_text_classification_folder(train_folder,max_tokens_per_doc=max_seq_len,
                                                                                            use_tokenizer=use_tokenizer)
-        sentences_test: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(test_file,
+        sentences_test: List[Sentence] = NLPTaskDataFetcher.read_text_classification_folder(test_folder,max_tokens_per_doc=max_seq_len,
                                                                                           use_tokenizer=use_tokenizer)
 
-        if dev_file is not None:
-            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(dev_file,
+        if dev_folder_name is not None:
+            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_text_classification_folder(dev_folder,max_tokens_per_doc=max_seq_len,
                                                                                              use_tokenizer=use_tokenizer)
         else:
             sentences_dev: List[Sentence] = [sentences_train[i] for i in
-                                             NLPTaskDataFetcher.__sample(len(sentences_train), 0.1)]
+                                             NLPTaskDataFetcher.__sample(len(sentences_train), dev_split_size)]
             sentences_train = [x for x in sentences_train if x not in sentences_dev]
 
         return TaggedCorpus(sentences_train, sentences_dev, sentences_test)
 
     @staticmethod
-    def read_text_classification_file(path_to_file: Union[str, Path], max_tokens_per_doc=-1, use_tokenizer=True) -> \
+    def read_text_classification_folder(path_to_folder: Union[str, Path], max_tokens_per_doc=-1, use_tokenizer=True) -> \
             List[Sentence]:
         """
         Reads a data file for text classification. The file should contain one document/text per line.
@@ -404,29 +408,34 @@ class NLPTaskDataFetcher:
         label_prefix = '__label__'
         sentences = []
 
-        with open(str(path_to_file), encoding='utf-8') as f:
-            for line in f:
-                words = line.split()
+        for data_file in path_to_folder.iterdir():
+            data_file_name = data_file.name
+            data_file_path = path_to_folder / data_file_name
+            data_file_path_str = str(data_file_path)
+            with open(data_file_path_str, encoding='utf-8') as f:
+                for line in f:
+                    words = line.split()
 
-                labels = []
-                l_len = 0
+                    labels = []
+                    l_len = 0
 
-                for i in range(len(words)):
-                    if words[i].startswith(label_prefix):
-                        l_len += len(words[i]) + 1
-                        label = words[i].replace(label_prefix, "")
-                        labels.append(label)
-                    else:
-                        break
+                    for i in range(len(words)):
+                        if words[i].startswith(label_prefix):
+                            l_len += len(words[i]) + 1
+                            label = words[i].replace(label_prefix, "")
+                            labels.append(label)
+                        else:
+                            break
 
-                text = line[l_len:].strip()
+                    text = line[l_len:].strip()
 
-                if text and labels:
-                    sentence = Sentence(text, labels=labels, use_tokenizer=use_tokenizer)
-                    if len(sentence) > max_tokens_per_doc and max_tokens_per_doc > 0:
-                        sentence.tokens = sentence.tokens[:max_tokens_per_doc]
-                    if len(sentence.tokens) > 0:
-                        sentences.append(sentence)
+                    if text and labels:
+                        labels = ['0' if l=='2' else l for l in labels]
+                        sentence = Sentence(text, labels=labels, use_tokenizer=use_tokenizer)
+                        if len(sentence) > max_tokens_per_doc and max_tokens_per_doc > 0:
+                            sentence.tokens = sentence.tokens[:max_tokens_per_doc]
+                        if len(sentence.tokens) > 0:
+                            sentences.append(sentence)
 
         return sentences
 
