@@ -182,7 +182,7 @@ class ModelTrainer:
                     train_metric, train_loss = self._calculate_evaluation_results_for(
                         'TRAIN', self.corpus.train, evaluation_metric, embeddings_in_memory, eval_mini_batch_size)
 
-                if not train_with_dev:
+                if not train_with_dev and len(self.corpus.dev) > 0:
                     dev_metric, dev_loss = self._calculate_evaluation_results_for(
                         'DEV', self.corpus.dev, evaluation_metric, embeddings_in_memory, eval_mini_batch_size)
 
@@ -202,7 +202,7 @@ class ModelTrainer:
 
                 # calculate scores using dev data if available
                 dev_score = 0.
-                if not train_with_dev:
+                if not train_with_dev and len(self.corpus.dev) > 0:
                     if evaluation_metric == EvaluationMetric.MACRO_ACCURACY:
                         dev_score = dev_metric.macro_avg_accuracy()
                     elif evaluation_metric == EvaluationMetric.MICRO_ACCURACY:
