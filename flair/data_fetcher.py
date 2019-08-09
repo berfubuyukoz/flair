@@ -325,6 +325,19 @@ class NLPTaskDataFetcher:
 
         return TaggedCorpus(sentences_train, sentences_dev, sentences_test, name=data_folder.name)
 
+
+    @staticmethod
+    def load_sentences_from_data(
+            data_folder: Union[str, Path],
+            max_seq_len=-1,
+            use_tokenizer: bool = True
+            ) -> List[Sentence]:
+
+        sentences: List[Sentence] = NLPTaskDataFetcher.read_text_classification_folder(data_folder,
+                                                                                            max_tokens_per_doc=max_seq_len,
+                                                                                            use_tokenizer=use_tokenizer)
+        return sentences
+
     @staticmethod
     def load_classification_corpus(
             data_folder: Union[str, Path],

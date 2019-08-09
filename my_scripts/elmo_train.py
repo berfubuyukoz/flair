@@ -54,7 +54,6 @@ corpus = NLPTaskDataFetcher.load_classification_corpus(data_folder,test_file='te
                                                        tokenizer_name='bert',
                                                        bert_model_or_path=BERT_BASE_DIR)
 '''
-
 #by default takes documents as a whole unless max_tokens_per_doc is specified.
 corpus = NLPTaskDataFetcher.load_classification_corpus(data_folder,train_folder_name='train',test_folder_name='test', dev_split_size=0, max_seq_len=128)
 
@@ -99,3 +98,9 @@ from flair.visual.training_curves import Plotter
 plotter = Plotter()
 plotter.plot_training_curves(data_folder + '/loss.tsv')
 plotter.plot_weights(data_folder + '/weights.txt')
+
+# Test model
+test_data_folder = Path('/Users/buyukozb/git/berfu/thesis/data/all_data/india/flair_formatted/test')
+test_sentences = NLPTaskDataFetcher.load_sentences_from_data(test_data_folder, max_seq_len=128)
+
+
