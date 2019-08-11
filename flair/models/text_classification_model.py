@@ -52,14 +52,10 @@ class TextClassifier(flair.nn.Model):
 
     def forward(self, sentences) -> List[List[float]]:
         self.document_embeddings.embed(sentences)
-        log.info(f'Document embeddings obtained.')
         text_embedding_list = [sentence.get_embedding().unsqueeze(0) for sentence in sentences]
-        log.info(f'Text embedding list obtained.')
         text_embedding_tensor = torch.cat(text_embedding_list, 0).to(flair.device)
-        log.info(f'Text embedding tensor obtained.')
 
         label_scores = self.decoder(text_embedding_tensor)
-        log.info(f'Label scores are obtained (Decoding).')
         return label_scores
 
     def save(self, model_file: Union[str, Path]):
@@ -142,7 +138,6 @@ class TextClassifier(flair.nn.Model):
 
     def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> torch.tensor:
         scores = self.forward(sentences)
-        log.info(f'Forward is called and completed.')
         return self._calculate_loss(scores, sentences)
 
     def forward_labels_and_loss(self, sentences: Union[Sentence, List[Sentence]]) -> (List[List[Label]], torch.tensor):

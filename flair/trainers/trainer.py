@@ -176,23 +176,19 @@ class ModelTrainer:
 
                 for batch_no, batch in enumerate(batches):
                     loss = self.model.forward_loss(batch)
-                    log.info(f'Forward loss computed.')
+                    log.info(f'Batch no: {batch_no}.')
 
                     optimizer.zero_grad()
-                    log.info(f'Optimizer zero grad completed.')
 
                     loss.backward()
-                    log.info(f'Backward loss computed.')
 
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(), 5.0)
                     optimizer.step()
-                    log.info(f'Optimizer step completed.')
 
                     seen_sentences += len(batch)
                     train_loss += loss.item()
 
                     clear_embeddings(batch, also_clear_word_embeddings=not embeddings_in_memory)
-                    log.info(f'Embeddings cleared.')
 
                     if batch_no % modulo == 0:
                         log.info(f'epoch {epoch + 1} - iter {batch_no}/{len(batches)} - loss '
