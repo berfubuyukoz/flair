@@ -11,7 +11,6 @@ from segtok.segmenter import split_single
 from segtok.tokenizer import split_contractions
 from segtok.tokenizer import word_tokenizer
 
-
 log = logging.getLogger('flair')
 
 
@@ -273,7 +272,11 @@ class Sentence:
     A Sentence is a list of Tokens and is used to represent a sentence or text fragment.
     """
 
-    def __init__(self, text: str = None, use_tokenizer: bool = False, labels: Union[List[Label], List[str]] = None):
+    def __init__(self, text: str = None,
+                 use_tokenizer: bool = False,
+                 labels: Union[List[Label], List[str]] = None,
+                 tokenizer_name: str = 'segtok',
+                 tokenizer=None):
 
         super(Sentence, self).__init__()
 
@@ -290,36 +293,45 @@ class Sentence:
             # tokenize the text first if option selected
             if use_tokenizer:
 
-                # use segtok for tokenization
-                tokens = []
-                sentences = split_single(text)
-                for sentence in sentences:
-                    contractions = split_contractions(word_tokenizer(sentence))
-                    tokens.extend(contractions)
+                if tokenizer_name == 'segtok':
+                    # use segtok for tokenization
+                    tokens = []
+                    sentences = split_single(text)
+                    for sentence in sentences:
+                        contractions = split_contractions(word_tokenizer(sentence))
+                        tokens.extend(contractions)
 
-                # determine offsets for whitespace_after field
-                index = text.index
-                running_offset = 0
-                last_word_offset = -1
-                last_token = None
-                for word in tokens:
-                    try:
-                        word_offset = index(word, running_offset)
-                        start_position = word_offset
-                    except:
-                        word_offset = last_word_offset + 1
-                        start_position = running_offset + 1 if running_offset > 0 else running_offset
+                    # determine offsets for whitespace_after field
+                    index = text.index
+                    running_offset = 0
+                    last_word_offset = -1
+                    last_token = None
+                    for word in tokens:
+                        try:
+                            word_offset = index(word, running_offset)
+                            start_position = word_offset
+                        except:
+                            word_offset = last_word_offset + 1
+                            start_position = running_offset + 1 if running_offset > 0 else running_offset
 
-                    token = Token(word, start_position=start_position)
-                    self.add_token(token)
+                        token = Token(word, start_position=start_position)
+                        self.add_token(token)
 
-                    if word_offset - 1 == last_word_offset and last_token is not None:
-                        last_token.whitespace_after = False
+                        if word_offset - 1 == last_word_offset and last_token is not None:
+                            last_token.whitespace_after = False
 
-                    word_len = len(word)
-                    running_offset = word_offset + word_len
-                    last_word_offset = running_offset - 1
-                    last_token = token
+                        word_len = len(word)
+                        running_offset = word_offset + word_len
+                        last_word_offset = running_offset - 1
+                        last_token = token
+                elif tokenizer_name == 'bert':
+                    if tokenizer is None:
+                        raise Exception("Bert tokenizer object must be provided.")
+                    tokens = tokenizer.tokenize(text=text)
+                    for t in tokens:
+                        self.add_token(Token(t))
+                else:
+                    raise Exception("Tokenizer {} is not yet supported.".format(tokenizer_name))
 
             # otherwise assumes whitespace tokenized text
             else:

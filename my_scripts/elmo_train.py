@@ -5,9 +5,13 @@ from flair.embeddings import *
 from flair.data_fetcher import *
 from pathlib import Path
 #BERT_BASE_DIR="/Users/buyukozb/Desktop/berfu/thesis/data/embedding_data/uncased_L-12_H-768_A-12"
-# init embedding
-#embedding = BertEmbeddings(BERT_BASE_DIR)
-
+BERT_MODEL_NAME = 'bert-base-uncased'
+TOKENIZER_NAME = 'bert'
+MAX_SEQ_LEN = 128
+DATA_FOLDER = Path('/Users/buyukozb/git/berfu/thesis/data/all_data/india/flair_formatted')
+TRAIN_FOLDER_NAME = 'train'
+TEST_FOLDER_NAME = 'test'
+DEV_SIZE = 0
 '''
 # create a sentence
 sentence = Sentence('The grass is green .')
@@ -40,9 +44,6 @@ for token in sentence:
 #tokenizer = BertTokenizer.from_pretrained(BERT_BASE_DIR)
 #tokens = tokenizer.tokenize('The grass is green . And the sky is blue .')
 
-# use your own data path
-data_folder = Path('/Users/buyukozb/git/berfu/thesis/data/all_data/india/flair_formatted')
-
 # load corpus containing training, test and dev data
 # in load_classification_corpus, use_tokenizer = True as default. It uses segtok tokenizer. Change it to BertTokenizer.
 # Differences from bert_tpu model:
@@ -55,7 +56,14 @@ corpus = NLPTaskDataFetcher.load_classification_corpus(data_folder,test_file='te
                                                        bert_model_or_path=BERT_BASE_DIR)
 '''
 #by default takes documents as a whole unless max_tokens_per_doc is specified.
-corpus = NLPTaskDataFetcher.load_classification_corpus(data_folder,train_folder_name='train',test_folder_name='test', dev_split_size=0, max_seq_len=128)
+corpus = NLPTaskDataFetcher.load_classification_corpus(data_folder=DATA_FOLDER,
+                                                       train_folder_name=TRAIN_FOLDER_NAME,
+                                                       test_folder_name=TEST_FOLDER_NAME,
+                                                       dev_split_size=DEV_SIZE,
+                                                       max_seq_len=MAX_SEQ_LEN,
+                                                       tokenizer_name=TOKENIZER_NAME,
+                                                       tokenizer_model_name_or_path=BERT_MODEL_NAME
+                                                       )
 
 from flair.models import TextClassifier
 from flair.trainers import ModelTrainer
@@ -65,8 +73,8 @@ from flair.training_utils import EvaluationMetric
 label_dict = corpus.make_label_dictionary()
 
 # 3. make a list of word embeddings
-#embedding = BertEmbeddings(BERT_BASE_DIR)
-embedding = ELMoEmbeddings(model="small")
+embedding = BertEmbeddings(BERT_MODEL_NAME)
+#embedding = ELMoEmbeddings(model="small")
 
 # 4. initialize document embedding by passing list of word embeddings
 # Can choose between many RNN types (GRU by default, to change use rnn_type parameter)
@@ -84,7 +92,7 @@ trainer = ModelTrainer(classifier, corpus)
 # Training aborted due to excessive size of documents. With each document limited to 5 sentences, training succesfully performed.
 # But the main reason I tried this tool was to overcome maximum length imposed in BERT.
 # So a workaround will not be helpful.
-trainer.train(data_folder,
+trainer.train(base_path=DATA_FOLDER,
               learning_rate=0.1,
               mini_batch_size=32,
               anneal_factor=0.5,

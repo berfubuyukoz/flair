@@ -274,7 +274,6 @@ class ModelTrainer:
                 self.model = TextClassifier.load_from_file(base_path / 'best-model.pt')
             if isinstance(self.model, SequenceTagger):
                 self.model = SequenceTagger.load_from_file(base_path / 'best-model.pt')
-
         test_metric, test_loss = self.evaluate(self.model, self.corpus.test, eval_mini_batch_size=eval_mini_batch_size,
                                                embeddings_in_memory=embeddings_in_memory)
 

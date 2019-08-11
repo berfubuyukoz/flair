@@ -8,6 +8,8 @@ import flair
 from flair.data import Sentence, TaggedCorpus, Token, MultiCorpus
 from flair.file_utils import cached_path
 
+from pytorch_pretrained_bert.tokenization import BertTokenizer
+
 log = logging.getLogger('flair')
 
 
@@ -345,8 +347,10 @@ class NLPTaskDataFetcher:
             test_folder_name=None,
             dev_folder_name=None,
             use_tokenizer: bool = True,
-            dev_split_size=0.1,
-            max_seq_len=-1) -> TaggedCorpus:
+            dev_split_size: float =0.1,
+            max_seq_len=-1,
+            tokenizer_name: str = 'segtok',
+            tokenizer_model_name_or_path: str = None) -> TaggedCorpus:
         """
         Helper function to get a TaggedCorpus from text classification-formatted task data
 
@@ -389,14 +393,23 @@ class NLPTaskDataFetcher:
         log.info("Dev: {}".format(dev_folder))
         log.info("Test: {}".format(test_folder))
 
-        sentences_train: List[Sentence] = NLPTaskDataFetcher.read_text_classification_folder(train_folder,max_tokens_per_doc=max_seq_len,
-                                                                                           use_tokenizer=use_tokenizer)
-        sentences_test: List[Sentence] = NLPTaskDataFetcher.read_text_classification_folder(test_folder,max_tokens_per_doc=max_seq_len,
-                                                                                          use_tokenizer=use_tokenizer)
+        sentences_train: List[Sentence] = NLPTaskDataFetcher.read_text_classification_folder(train_folder,
+                                                                                            max_tokens_per_doc=max_seq_len,
+                                                                                            use_tokenizer=use_tokenizer,
+                                                                                            tokenizer_name=tokenizer_name,
+                                                                                            tokenizer_model_name_or_path=tokenizer_model_name_or_path)
+        sentences_test: List[Sentence] = NLPTaskDataFetcher.read_text_classification_folder(test_folder,
+                                                                                            max_tokens_per_doc=max_seq_len,
+                                                                                            use_tokenizer=use_tokenizer,
+                                                                                            tokenizer_name=tokenizer_name,
+                                                                                            tokenizer_model_name_or_path=tokenizer_model_name_or_path)
 
         if dev_folder_name is not None:
-            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_text_classification_folder(dev_folder,max_tokens_per_doc=max_seq_len,
-                                                                                             use_tokenizer=use_tokenizer)
+            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_text_classification_folder(dev_folder,
+                                                                                               max_tokens_per_doc=max_seq_len,
+                                                                                               use_tokenizer=use_tokenizer,
+                                                                                               tokenizer_name=tokenizer_name,
+                                                                                               tokenizer_model_name_or_path=tokenizer_model_name_or_path)
         else:
             sentences_dev: List[Sentence] = [sentences_train[i] for i in
                                              NLPTaskDataFetcher.__sample(len(sentences_train), dev_split_size)]
@@ -405,7 +418,12 @@ class NLPTaskDataFetcher:
         return TaggedCorpus(sentences_train, sentences_dev, sentences_test)
 
     @staticmethod
-    def read_text_classification_folder(path_to_folder: Union[str, Path], max_tokens_per_doc=-1, use_tokenizer=True) -> \
+    def read_text_classification_folder(path_to_folder: Union[str, Path],
+                                        max_tokens_per_doc=-1,
+                                        use_tokenizer=True,
+                                        tokenizer_name: str = 'segtok',
+                                        tokenizer_model_name_or_path: str = None
+                                        ) -> \
             List[Sentence]:
         """
         Reads a data file for text classification. The file should contain one document/text per line.
@@ -421,6 +439,10 @@ class NLPTaskDataFetcher:
         label_prefix = '__label__'
         sentences = []
 
+        tokenizer = None
+        if use_tokenizer and (tokenizer_name=='bert'):
+            tokenizer = BertTokenizer.from_pretrained(tokenizer_model_name_or_path)
+            #tokenizer = BertTokenizer.from_pretrained(tokenizer_model_name_or_path, max_len=max_tokens_per_doc)
         for data_file in path_to_folder.iterdir():
             data_file_name = data_file.name
             data_file_path = path_to_folder / data_file_name
@@ -444,9 +466,19 @@ class NLPTaskDataFetcher:
 
                     if text and labels:
                         labels = ['0' if l=='2' else l for l in labels]
-                        sentence = Sentence(text, labels=labels, use_tokenizer=use_tokenizer)
+                        sentence = Sentence(text, labels=labels,
+                                            use_tokenizer=use_tokenizer,
+                                            tokenizer_name='bert',
+                                            tokenizer=tokenizer)
                         if len(sentence) > max_tokens_per_doc and max_tokens_per_doc > 0:
-                            sentence.tokens = sentence.tokens[:max_tokens_per_doc]
+                            if tokenizer_name == 'bert':
+                                tokens = sentence.tokens[:max_tokens_per_doc-2] # CLS and SEP are excluded from the count.
+                                # add [CLS] and [SEP] tokens at the ends.
+                                cls_start_pos = tokens[0].idx - 1
+                                sep_start_pos = tokens[-1].idx + 1
+                                sentence.tokens = [Token("[CLS]", start_position=cls_start_pos)] + tokens + [Token("[SEP]", start_position=sep_start_pos)]
+                            else:
+                                sentence.tokens = sentence.tokens[:max_tokens_per_doc]
                         if len(sentence.tokens) > 0:
                             sentences.append(sentence)
 
