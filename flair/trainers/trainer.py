@@ -176,25 +176,31 @@ class ModelTrainer:
 
                 for batch_no, batch in enumerate(batches):
                     loss = self.model.forward_loss(batch)
+                    log.info(f'Forward loss computed.')
 
                     optimizer.zero_grad()
+                    log.info(f'Optimizer zero grad completed.')
+
                     loss.backward()
+                    log.info(f'Backward loss computed.')
+
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(), 5.0)
                     optimizer.step()
+                    log.info(f'Optimizer step completed.')
 
                     seen_sentences += len(batch)
                     train_loss += loss.item()
 
                     clear_embeddings(batch, also_clear_word_embeddings=not embeddings_in_memory)
+                    log.info(f'Embeddings cleared.')
 
                     if batch_no % modulo == 0:
                         log.info(f'epoch {epoch + 1} - iter {batch_no}/{len(batches)} - loss '
                                  f'{train_loss / seen_sentences:.8f}')
                         iteration = epoch * len(batches) + batch_no
                         if not param_selection_mode:
-                            log.info(f'Weights will be extracted now...')
                             weight_extractor.extract_weights(self.model.state_dict(), iteration)
-                            log.info(f'Weight extraction is completed.')
+                            log.info(f'Weights extracted.')
                 train_loss /= len(train_data)
 
                 self.model.eval()
