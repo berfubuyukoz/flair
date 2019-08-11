@@ -14,6 +14,8 @@ from flair.training_utils import Metric, init_output_file, WeightExtractor, clea
     log_line, add_file_handler
 from flair.optim import *
 
+# from pytorch_pretrained_bert.optimization import BertAdam
+
 
 log = logging.getLogger('flair')
 
@@ -24,6 +26,7 @@ class ModelTrainer:
                  model: flair.nn.Model,
                  corpus: Corpus,
                  optimizer: Optimizer = SGD,
+                 # optimizer: Optimizer = AdamW
                  epoch:int = 0,
                  loss: float = 10000.0,
                  optimizer_state: dict = None,
@@ -80,6 +83,29 @@ class ModelTrainer:
             weight_extractor = WeightExtractor(base_path)
 
         optimizer = self.optimizer(self.model.parameters(), lr=learning_rate, **kwargs)
+
+        '''BertAdam optimizer initialization starts. 
+        One can simply use AdamW instead of uncommenting these lines below. But the two Adams optimizers are not necessarily the same.'''
+        '''
+        train_batch_size = mini_batch_size
+        param_optimizer = list(self.model.named_parameters())
+        no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
+        # Below weight_decay of all parameters except the ones in no_decay list is set to 0.01. No_decay list weight decay is set to 0.
+        optimizer_grouped_parameters = [
+            {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': 0.01},
+            {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
+        ]
+
+        num_train_optimization_steps = int(
+            len(self.corpus.train) / train_batch_size) * max_epochs
+
+        optimizer = BertAdam(optimizer_grouped_parameters,
+                             lr=learning_rate,
+                             t_total=num_train_optimization_steps)
+                             
+        '''
+        '''BertAdam optimizer initialization ends.'''
+
         if self.optimizer_state is not None:
             optimizer.load_state_dict(self.optimizer_state)
 
@@ -111,6 +137,8 @@ class ModelTrainer:
             previous_learning_rate = learning_rate
 
             for epoch in range(0 + self.epoch, max_epochs + self.epoch):
+                log_line(log)
+                log.info(f'epoch no: {epoch + 1}')
                 log_line(log)
 
                 try:
@@ -164,8 +192,9 @@ class ModelTrainer:
                                  f'{train_loss / seen_sentences:.8f}')
                         iteration = epoch * len(batches) + batch_no
                         if not param_selection_mode:
+                            log.info(f'Weights will be extracted now...')
                             weight_extractor.extract_weights(self.model.state_dict(), iteration)
-
+                            log.info(f'Weight extraction is completed.')
                 train_loss /= len(train_data)
 
                 self.model.eval()
