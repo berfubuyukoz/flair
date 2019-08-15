@@ -54,6 +54,7 @@ class ModelTrainer:
               monitor_train: bool = False,
               embeddings_in_memory: bool = True,
               checkpoint: bool = False,
+              save_model_period_indicator = -1,
               save_final_model: bool = True,
               anneal_with_restarts: bool = False,
               test_mode: bool = False,
@@ -173,7 +174,10 @@ class ModelTrainer:
                 train_loss: float = 0
                 seen_sentences = 0
                 modulo = max(1, int(len(batches) / 10))
-
+                num_bathces = len(batches)
+                save_model_period = -1
+                if save_model_period_indicator != -1:
+                    save_model_period = (int)(num_bathces/save_model_period_indicator)
                 for batch_no, batch in enumerate(batches):
                     loss = self.model.forward_loss(batch)
                     log.info(f'Batch no: {batch_no}.')
@@ -197,7 +201,7 @@ class ModelTrainer:
                         if not param_selection_mode:
                             weight_extractor.extract_weights(self.model.state_dict(), iteration)
                             log.info(f'Weights extracted.')
-                    if batch_no > 0 and batch_no % (int)(batches/3) == 0:
+                    if batch_no > 0 and save_model_period != -1 and batch_no % save_model_period == 0:
                         log.info(f'saving model on batch {batch_no}')
                         self.model.save(base_path / 'saved-model_batch_' + str(batch_no) + '.py')
                 train_loss /= len(train_data)
