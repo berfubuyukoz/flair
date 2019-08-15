@@ -201,7 +201,7 @@ class ModelTrainer:
                         if not param_selection_mode:
                             weight_extractor.extract_weights(self.model.state_dict(), iteration)
                             log.info(f'Weights extracted.')
-                    if batch_no > 0 and save_model_period != -1 and batch_no % save_model_period == 0:
+                    if save_model_period != -1 and batch_no % save_model_period == 0:
                         log.info(f'saving model on batch {batch_no}')
                         save_model_name = 'saved-model_batch_' + str(batch_no) + '.py'
                         self.model.save(base_path / save_model_name)
