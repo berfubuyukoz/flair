@@ -203,7 +203,7 @@ class ModelTrainer:
                             log.info(f'Weights extracted.')
                     if save_model_period != -1 and batch_no % save_model_period == 0:
                         log.info(f'saving model on batch {batch_no}')
-                        save_model_name = 'saved-model_batch_' + str(batch_no) + '.py'
+                        save_model_name = 'saved-model_batch_' + str(batch_no) + '.pt'
                         self.model.save(base_path / save_model_name)
                 train_loss /= len(train_data)
 
