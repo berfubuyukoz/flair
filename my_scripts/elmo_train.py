@@ -50,6 +50,15 @@ for token in sentence:
 # in original data (rcv1 china), sentences are separated with \n. In the flair version of the data, \n are removed. Sentences in a document are separated with simply whitespace.
 # This arrangement was needed because flair wants data in a format that on each document is on a single line.
 # Data is splitted into train/test by using Sklearn. But here, if there is no dev set available, flair takes 0.1 of the train as dev set.
+
+TEST_DATA_DIR_EDITED = '/Users/buyukozb/git/berfu/thesis/data/all_data/india/flair_formatted'
+test_data_folder = Path(TEST_DATA_DIR_EDITED)
+test_data_folder = test_data_folder / 'random'
+test_sentences = NLPTaskDataFetcher.load_sentences_from_data(test_data_folder, max_seq_len=128)
+test_sentences_pred = test_sentences.copy()
+actual_labels = [s.labels[0].value for s in test_sentences]
+
+
 '''
 corpus = NLPTaskDataFetcher.load_classification_corpus(data_folder,test_file='test.txt',train_file='train.txt',
                                                        tokenizer_name='bert',
