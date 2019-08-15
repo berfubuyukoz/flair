@@ -468,7 +468,7 @@ class NLPTaskDataFetcher:
                         labels = ['0' if l=='2' else l for l in labels]
                         sentence = Sentence(text, labels=labels,
                                             use_tokenizer=use_tokenizer,
-                                            tokenizer_name='bert',
+                                            tokenizer_name=tokenizer_name,
                                             tokenizer=tokenizer)
                         if len(sentence) > max_tokens_per_doc and max_tokens_per_doc > 0:
                             if tokenizer_name == 'bert':
