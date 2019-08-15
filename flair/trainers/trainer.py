@@ -197,6 +197,9 @@ class ModelTrainer:
                         if not param_selection_mode:
                             weight_extractor.extract_weights(self.model.state_dict(), iteration)
                             log.info(f'Weights extracted.')
+                    if batch_no > 0 and batch_no % (int)(batches/3) == 0:
+                        log.info(f'saving model on batch {batch_no}')
+                        self.model.save(base_path / 'saved-model_batch_' + str(batch_no) + '.py')
                 train_loss /= len(train_data)
 
                 self.model.eval()
