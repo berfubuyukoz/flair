@@ -25,7 +25,7 @@ document embeddings, including our proposed **[Flair embeddings](https://drive.g
 * **A Pytorch NLP framework.** Our framework builds directly on [Pytorch](https://pytorch.org/), making it easy to 
 train your own models and experiment with new approaches using Flair embeddings and classes.
 
-Now at [version 0.4.1](https://github.com/zalandoresearch/flair/releases)!
+Now at [version 0.4.2](https://github.com/zalandoresearch/flair/releases)!
 
 ## Comparison with State-of-the-Art
 
@@ -49,9 +49,13 @@ Here's how to [reproduce these numbers](/resources/docs/EXPERIMENTS.md) using Fl
 Alan Akbik, Duncan Blythe and Roland Vollgraf. 
 27th International Conference on Computational Linguistics, **COLING 2018**.*
 
-* *Pooled Contextualized Embeddings for Named Entity Recognition (to appear).
+* *[Pooled Contextualized Embeddings for Named Entity Recognition](https://www.aclweb.org/anthology/papers/N/N19/N19-1078/).
 Alan Akbik, Tanja Bergmann and Roland Vollgraf.
 2019 Annual Conference of the North American Chapter of the Association for Computational Linguistics, **NAACL 2019**.*
+
+* *[FLAIR: An Easy-to-Use Framework for State-of-the-Art NLP](https://www.aclweb.org/anthology/papers/N/N19/N19-4010/).
+Alan Akbik, Tanja Bergmann, Duncan Blythe, Kashif Rasul, Stefan Schweter and Roland Vollgraf.
+2019 Annual Conference of the North American Chapter of the Association for Computational Linguistics (Demonstrations), **NAACL 2019**.*
 
 ## Quick Start
 
@@ -151,7 +155,7 @@ If you use the pooled version of the Flair embeddings (PooledFlairEmbeddings), p
   title={Pooled Contextualized Embeddings for Named Entity Recognition},
   author={Akbik, Alan and Bergmann, Tanja and Vollgraf, Roland},
   booktitle = {{NAACL} 2019, 2019 Annual Conference of the North American Chapter of the Association for Computational Linguistics},
-  pages     = {to appear},
+  pages     = {724–728},
   year      = {2019}
 }
 ```
@@ -190,6 +194,18 @@ To also run slow tests, such as loading and using the embeddings provided by fla
 ```bash
 pytest --runslow tests/
 ```
+
+### Code Style
+
+To ensure a standardized code style we use the formatter [black](https://github.com/ambv/black).
+If your code is not formatted properly, travis will fail to build.
+
+If you want to automatically format your code on every commit, you can use [pre-commit](https://pre-commit.com/).
+Just install it via `pip install pre-commit` and execute `pre-commit install` in the root folder.
+This will add a hook to the repository, which reformats files on every commit.
+
+If you want to set it up manually, install black via `pip install black`.
+To reformat files execute `black .`.
 
 ## [License](/LICENSE)
 
