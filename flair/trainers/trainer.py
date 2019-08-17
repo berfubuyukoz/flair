@@ -179,15 +179,16 @@ class ModelTrainer:
                 if save_model_period_indicator != -1:
                     save_model_period = (int)(num_bathces/save_model_period_indicator)
                 for batch_no, batch in enumerate(batches):
-                    loss = self.model.forward_loss(batch)
+                    loss = self.model.forward_loss(batch) # loss type: torch.nn.CrossEntropy
                     log.info(f'Batch no: {batch_no}.')
 
-                    optimizer.zero_grad()
+                    optimizer.zero_grad() # clears x.grad for every parameter x in the optimizer.
+                    # It’s important to call this before loss.backward(), otherwise you’ll accumulate the gradients from multiple passes.
 
-                    loss.backward()
+                    loss.backward() # computes gradients for every parameter that has requires_grad = True.
 
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(), 5.0)
-                    optimizer.step()
+                    optimizer.step() # updates the value of x using learning rate.
 
                     seen_sentences += len(batch)
                     train_loss += loss.item()

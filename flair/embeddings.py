@@ -390,6 +390,8 @@ class ELMoEmbeddings(TokenEmbeddings):
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
 
+        logging.info(f'Elmo Embedddings are being retrieved for sentence list.')
+
         sentence_words: List[List[str]] = []
         for sentence in sentences:
             sentence_words.append([token.text for token in sentence])
