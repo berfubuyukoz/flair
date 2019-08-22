@@ -922,8 +922,8 @@ class ClassificationDataset(FlairDataset):
         if self.in_memory:
             return self.sentences[index]
         else:
-
-            with open(str(self.path_to_file), encoding="utf-8") as file:
+            # this block of code won't work.
+            with open(str(self.path_to_folder), encoding="utf-8") as file:
                 file.seek(self.indices[index])
                 line = file.readline()
                 sentence = self._parse_line_to_sentence(
