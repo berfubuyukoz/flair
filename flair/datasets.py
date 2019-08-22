@@ -14,6 +14,8 @@ import flair
 from flair.data import Sentence, Corpus, Token, FlairDataset
 from flair.file_utils import cached_path
 
+from pytorch_transformers.tokenization_bert import BertTokenizer
+
 log = logging.getLogger("flair")
 
 
@@ -180,13 +182,16 @@ class ClassificationCorpus(Corpus):
     def __init__(
         self,
         data_folder: Union[str, Path],
-        train_file=None,
-        test_file=None,
-        dev_file=None,
+        train_folder_name=None,
+        test_folder_name=None,
+        dev_folder_name=None,
+        dev_split_size: float = 0.1,
         use_tokenizer: bool = True,
         max_tokens_per_doc: int = -1,
         max_chars_per_doc: int = -1,
         in_memory: bool = False,
+        tokenizer_name: str = 'segtok',
+        tokenizer_model_name_or_path: str = None
     ):
         """
         Instantiates a Corpus from text classification-formatted task data
@@ -201,60 +206,68 @@ class ClassificationCorpus(Corpus):
         if type(data_folder) == str:
             data_folder: Path = Path(data_folder)
 
-        if train_file is not None:
-            train_file = data_folder / train_file
-        if test_file is not None:
-            test_file = data_folder / test_file
-        if dev_file is not None:
-            dev_file = data_folder / dev_file
+        if train_folder_name is not None:
+            train_folder = data_folder / train_folder_name
+        if test_folder_name is not None:
+            test_folder = data_folder / test_folder_name
+        if dev_folder_name is not None:
+            dev_folder = data_folder / dev_folder_name
+        else:
+            dev_folder = None
 
         # automatically identify train / test / dev files
-        if train_file is None:
-            for file in data_folder.iterdir():
-                file_name = file.name
-                if "train" in file_name:
-                    train_file = file
-                if "test" in file_name:
-                    test_file = file
-                if "dev" in file_name:
-                    dev_file = file
-                if "testa" in file_name:
-                    dev_file = file
-                if "testb" in file_name:
-                    test_file = file
+        if train_folder_name is None:
+            for foldr in data_folder.iterdir():
+                foldr_name = foldr.name
+                if 'train' in foldr_name:
+                    train_folder = foldr
+                if 'test' in foldr_name:
+                    test_folder = foldr
+                if 'dev' in foldr_name:
+                    dev_folder = foldr
+                if 'testa' in foldr_name:
+                    dev_folder = foldr
+                if 'testb' in foldr_name:
+                    test_folder = foldr
 
         log.info("Reading data from {}".format(data_folder))
-        log.info("Train: {}".format(train_file))
-        log.info("Dev: {}".format(dev_file))
-        log.info("Test: {}".format(test_file))
+        log.info("Train: {}".format(train_folder))
+        log.info("Dev: {}".format(dev_folder))
+        log.info("Test: {}".format(test_folder))
 
         train: Dataset = ClassificationDataset(
-            train_file,
+            train_folder,
             use_tokenizer=use_tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
             max_chars_per_doc=max_chars_per_doc,
             in_memory=in_memory,
+            tokenizer_name=tokenizer_name,
+            tokenizer_model_name_or_path=tokenizer_model_name_or_path
         )
         test: Dataset = ClassificationDataset(
-            test_file,
+            test_folder,
             use_tokenizer=use_tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
             max_chars_per_doc=max_chars_per_doc,
             in_memory=in_memory,
+            tokenizer_name=tokenizer_name,
+            tokenizer_model_name_or_path=tokenizer_model_name_or_path
         )
 
-        if dev_file is not None:
+        if dev_folder is not None:
             dev: Dataset = ClassificationDataset(
-                dev_file,
+                dev_folder,
                 use_tokenizer=use_tokenizer,
                 max_tokens_per_doc=max_tokens_per_doc,
                 max_chars_per_doc=max_chars_per_doc,
                 in_memory=in_memory,
+                tokenizer_name=tokenizer_name,
+                tokenizer_model_name_or_path=tokenizer_model_name_or_path
             )
         else:
             train_length = len(train)
-            dev_size: int = round(train_length / 10)
-            splits = random_split(train, [train_length - dev_size, dev_size])
+            dev_length: int = round(train_length * dev_split_size)
+            splits = random_split(train, [train_length - dev_length, dev_length])
             train = splits[0]
             dev = splits[1]
 
@@ -777,11 +790,13 @@ class CSVClassificationDataset(FlairDataset):
 class ClassificationDataset(FlairDataset):
     def __init__(
         self,
-        path_to_file: Union[str, Path],
+        path_to_folder: Union[str, Path],
         max_tokens_per_doc=-1,
         max_chars_per_doc=-1,
         use_tokenizer=True,
         in_memory: bool = True,
+        tokenizer_name: str = 'segtok',
+        tokenizer_model_name_or_path: str = None
     ):
         """
         Reads a data file for text classification. The file should contain one document/text per line.
@@ -793,15 +808,17 @@ class ClassificationDataset(FlairDataset):
         :param max_tokens_per_doc: Takes at most this amount of tokens per document. If set to -1 all documents are taken as is.
         :return: list of sentences
         """
-        if type(path_to_file) == str:
-            path_to_file: Path = Path(path_to_file)
+        if type(path_to_folder) == str:
+            path_to_file: Path = Path(path_to_folder)
 
-        assert path_to_file.exists()
+        assert path_to_folder.exists()
 
         self.label_prefix = "__label__"
 
         self.in_memory = in_memory
         self.use_tokenizer = use_tokenizer
+        self.tokenizer_name = tokenizer_name
+        self.tokenizer_model_name_or_path = tokenizer_model_name_or_path
 
         if self.in_memory:
             self.sentences = []
@@ -812,33 +829,45 @@ class ClassificationDataset(FlairDataset):
         self.max_chars_per_doc = max_chars_per_doc
         self.max_tokens_per_doc = max_tokens_per_doc
 
-        self.path_to_file = path_to_file
+        self.path_to_folder = path_to_folder
 
-        with open(str(path_to_file), encoding="utf-8") as f:
-            line = f.readline()
-            position = 0
-            while line:
-                if "__label__" not in line or " " not in line:
+        tokenizer = None
+        if self.use_tokenizer and (self.tokenizer_name == 'bert'):
+            tokenizer = BertTokenizer.from_pretrained(self.tokenizer_model_name_or_path)
+            # tokenizer = BertTokenizer.from_pretrained(tokenizer_model_name_or_path, max_len=max_tokens_per_doc)
+        for data_file in self.path_to_folder.iterdir():
+            data_file_name = data_file.name
+            data_file_path = self.path_to_folder / data_file_name
+            data_file_path_str = str(data_file_path)
+            with open(str(path_to_file), encoding="utf-8") as f:
+                line = f.readline()
+                position = 0
+                while line:
+                    if "__label__" not in line or " " not in line:
+                        position = f.tell()
+                        line = f.readline()
+                        continue
+
+                    if self.in_memory:
+                        sentence = self._parse_line_to_sentence(
+                            line, self.label_prefix, use_tokenizer,
+                            tokenizer_name=self.tokenizer_name,
+                            tokenizer=tokenizer
+                        )
+                        if sentence is not None and len(sentence.tokens) > 0:
+                            self.sentences.append(sentence)
+                            self.total_sentence_count += 1
+                    else:
+                        self.indices.append(position)
+                        self.total_sentence_count += 1
+
                     position = f.tell()
                     line = f.readline()
-                    continue
-
-                if self.in_memory:
-                    sentence = self._parse_line_to_sentence(
-                        line, self.label_prefix, use_tokenizer
-                    )
-                    if sentence is not None and len(sentence.tokens) > 0:
-                        self.sentences.append(sentence)
-                        self.total_sentence_count += 1
-                else:
-                    self.indices.append(position)
-                    self.total_sentence_count += 1
-
-                position = f.tell()
-                line = f.readline()
 
     def _parse_line_to_sentence(
-        self, line: str, label_prefix: str, use_tokenizer: bool = True
+        self, line: str, label_prefix: str, use_tokenizer: bool = True,
+        tokenizer_name: str = 'segtok',
+        tokenizer=None
     ):
         words = line.split()
 
@@ -859,14 +888,26 @@ class ClassificationDataset(FlairDataset):
             text = text[: self.max_chars_per_doc]
 
         if text and labels:
-            sentence = Sentence(text, labels=labels, use_tokenizer=use_tokenizer)
+            labels = ['0' if l == '2' else l for l in labels]
+            sentence = Sentence(text, labels=labels, use_tokenizer=use_tokenizer,
+                                tokenizer_name=tokenizer_name,
+                                tokenizer=tokenizer
+                                )
 
             if (
                 sentence is not None
                 and len(sentence) > self.max_tokens_per_doc
                 and self.max_tokens_per_doc > 0
             ):
-                sentence.tokens = sentence.tokens[: self.max_tokens_per_doc]
+                if tokenizer_name == 'bert':
+                    tokens = sentence.tokens[:self.max_tokens_per_doc - 2]  # CLS and SEP are excluded from the count.
+                    # add [CLS] and [SEP] tokens at the ends.
+                    cls_start_pos = tokens[0].idx - 1
+                    sep_start_pos = tokens[-1].idx + 1
+                    sentence.tokens = [Token("[CLS]", start_position=cls_start_pos)] + tokens + [
+                        Token("[SEP]", start_position=sep_start_pos)]
+                else:
+                    sentence.tokens = sentence.tokens[:self.max_tokens_per_doc]
 
             return sentence
         return None
