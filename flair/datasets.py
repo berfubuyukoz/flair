@@ -804,12 +804,12 @@ class ClassificationDataset(FlairDataset):
         __label__<class_name> <text>
         If you have a multi class task, you can have as many labels as you want at the beginning of the line, e.g.,
         __label__<class_name_1> __label__<class_name_2> <text>
-        :param path_to_file: the path to the data file
+        :param path_to_folder: the path to the data file
         :param max_tokens_per_doc: Takes at most this amount of tokens per document. If set to -1 all documents are taken as is.
         :return: list of sentences
         """
         if type(path_to_folder) == str:
-            path_to_file: Path = Path(path_to_folder)
+            path_to_folder: Path = Path(path_to_folder)
 
         assert path_to_folder.exists()
 
@@ -839,7 +839,7 @@ class ClassificationDataset(FlairDataset):
             data_file_name = data_file.name
             data_file_path = self.path_to_folder / data_file_name
             data_file_path_str = str(data_file_path)
-            with open(str(path_to_file), encoding="utf-8") as f:
+            with open(data_file_path_str, encoding="utf-8") as f:
                 line = f.readline()
                 position = 0
                 while line:
