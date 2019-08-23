@@ -2147,7 +2147,7 @@ class BertEmbeddings(TokenEmbeddings):
         # put encoded batch through BERT model to get all hidden states of all encoder layers
         self.model.to(flair.device)
         self.model.eval()
-        _, _, all_encoder_layers = self.model(
+        all_encoder_layers, _ = self.model(
             all_input_ids, token_type_ids=None, attention_mask=all_input_masks
         )
 
