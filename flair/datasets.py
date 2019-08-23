@@ -921,7 +921,8 @@ class ClassificationDataset(FlairDataset): #has list of Sentence objects named "
     def __getitem__(self, index: int = 0) -> Sentence:
         if self.in_memory:
             return self.sentences[index]
-        else:
+        else:#This piece of code is not tested. I am using folders instead of files for
+            # my datasets, so I changed this code to iterate over a folder.
             for data_file in self.path_to_folder.iterdir():
                 data_file_name = data_file.name
                 data_file_path = self.path_to_folder / data_file_name

@@ -2,8 +2,13 @@
 import sys
 #sys.path.insert(0, '/Users/buyukozb/git/thesis/mylibs')
 from flair.embeddings import *
-from flair.data_fetcher import *
+from flair.datasets import *
 from pathlib import Path
+
+from flair.models import TextClassifier
+from flair.trainers import ModelTrainer
+from flair.training_utils import EvaluationMetric
+
 #BERT_BASE_DIR="/Users/buyukozb/Desktop/berfu/thesis/data/embedding_data/uncased_L-12_H-768_A-12"
 BERT_MODEL_NAME = 'bert-base-uncased'
 TOKENIZER_NAME = 'bert'
@@ -51,32 +56,22 @@ for token in sentence:
 # This arrangement was needed because flair wants data in a format that on each document is on a single line.
 # Data is splitted into train/test by using Sklearn. But here, if there is no dev set available, flair takes 0.1 of the train as dev set.
 
-TEST_DATA_DIR_EDITED = '/Users/buyukozb/git/berfu/thesis/data/all_data/india/flair_formatted'
-test_data_folder = Path(TEST_DATA_DIR_EDITED)
-test_data_folder = test_data_folder / 'random'
-test_sentences = NLPTaskDataFetcher.load_sentences_from_data(test_data_folder, max_seq_len=128)
-test_sentences_pred = test_sentences.copy()
-actual_labels = [s.labels[0].value for s in test_sentences]
+# TEST_DATA_DIR_EDITED = '/Users/buyukozb/git/berfu/thesis/data/all_data/india/flair_formatted'
+# test_data_folder = Path(TEST_DATA_DIR_EDITED)
+# test_data_folder = test_data_folder / 'random'
+# test_sentences = NLPTaskDataFetcher.load_sentences_from_data(test_data_folder, max_seq_len=128)
+# test_sentences_pred = test_sentences.copy()
+# actual_labels = [s.labels[0].value for s in test_sentences]
 
-
-'''
-corpus = NLPTaskDataFetcher.load_classification_corpus(data_folder,test_file='test.txt',train_file='train.txt',
-                                                       tokenizer_name='bert',
-                                                       bert_model_or_path=BERT_BASE_DIR)
-'''
 #by default takes documents as a whole unless max_tokens_per_doc is specified.
-corpus = NLPTaskDataFetcher.load_classification_corpus(data_folder=DATA_FOLDER,
-                                                       train_folder_name=TRAIN_FOLDER_NAME,
-                                                       test_folder_name=TEST_FOLDER_NAME,
-                                                       dev_split_size=DEV_SIZE,
-                                                       max_seq_len=MAX_SEQ_LEN,
-                                                       tokenizer_name=TOKENIZER_NAME,
-                                                       tokenizer_model_name_or_path=BERT_MODEL_NAME
-                                                       )
-
-from flair.models import TextClassifier
-from flair.trainers import ModelTrainer
-from flair.training_utils import EvaluationMetric
+corpus = ClassificationCorpus(data_folder=DATA_FOLDER,
+                              train_folder_name=TRAIN_FOLDER_NAME,
+                              test_folder_name=TEST_FOLDER_NAME,
+                              dev_split_size=DEV_SIZE,
+                              max_tokens_per_doc=MAX_SEQ_LEN,
+                              tokenizer_name=TOKENIZER_NAME,
+                              tokenizer_model_name_or_path=BERT_MODEL_NAME,
+                              in_memory=True)
 
 # 2. create the label dictionary
 label_dict = corpus.make_label_dictionary()
@@ -113,11 +108,11 @@ trainer.train(base_path=DATA_FOLDER,
 # 8. plot training curves (optional)
 from flair.visual.training_curves import Plotter
 plotter = Plotter()
-plotter.plot_training_curves(data_folder + '/loss.tsv')
-plotter.plot_weights(data_folder + '/weights.txt')
+plotter.plot_training_curves(DATA_FOLDER + '/loss.tsv')
+plotter.plot_weights(DATA_FOLDER + '/weights.txt')
 
-# Test model
-test_data_folder = Path('/Users/buyukozb/git/berfu/thesis/data/all_data/india/flair_formatted/test')
-test_sentences = NLPTaskDataFetcher.load_sentences_from_data(test_data_folder, max_seq_len=128)
-
-
+# # Test model
+# test_data_folder = Path('/Users/buyukozb/git/berfu/thesis/data/all_data/india/flair_formatted/test')
+# test_sentences = NLPTaskDataFetcher.load_sentences_from_data(test_data_folder, max_seq_len=128)
+#
+#
