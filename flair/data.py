@@ -936,6 +936,39 @@ class Corpus:
             len(self.test),
         )
 
+    def make_label_dictionary_without_using_tqdm(self) -> Dictionary:
+        """
+        Creates a dictionary of all labels assigned to the sentences in the corpus.
+        :return: dictionary of labels.
+
+
+        I wrote this function to workaround the issue in the original make_label_dictionary
+        function appears which has had to do with tqdm that requires a train file not folder.
+        'IsADirectoryError: [Errno 21] Is a directory: '/content/drive/My Drive/thesis/data/india/flair_formatted/train'
+        """
+
+        label_dictionary: Dictionary = Dictionary(add_unk=False)
+        label_dictionary.multi_label = False
+
+        from flair.datasets import DataLoader
+
+        loader = DataLoader(self.train, batch_size=1)
+
+        log.info("Computing label dictionary. Progress:")
+
+        for batch in loader:
+            for sentence in batch:
+                for label in sentence.labels:
+                    label_dictionary.add_item(label.value)
+
+                if not label_dictionary.multi_label:
+                    if len(sentence.labels) > 1:
+                        label_dictionary.multi_label = True
+
+        log.info(label_dictionary.idx2item)
+
+        return label_dictionary
+
     def make_label_dictionary(self) -> Dictionary:
         """
         Creates a dictionary of all labels assigned to the sentences in the corpus.
@@ -949,6 +982,7 @@ class Corpus:
         loader = DataLoader(self.train, batch_size=1)
 
         log.info("Computing label dictionary. Progress:")
+
         for batch in Tqdm.tqdm(iter(loader)):
 
             for sentence in batch:

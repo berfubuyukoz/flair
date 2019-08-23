@@ -787,7 +787,7 @@ class CSVClassificationDataset(FlairDataset):
             return sentence
 
 
-class ClassificationDataset(FlairDataset):
+class ClassificationDataset(FlairDataset): #has list of Sentence objects named "sentences".
     def __init__(
         self,
         path_to_folder: Union[str, Path],
