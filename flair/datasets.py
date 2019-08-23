@@ -922,14 +922,17 @@ class ClassificationDataset(FlairDataset): #has list of Sentence objects named "
         if self.in_memory:
             return self.sentences[index]
         else:
-            # this block of code won't work.
-            with open(str(self.path_to_folder), encoding="utf-8") as file:
-                file.seek(self.indices[index])
-                line = file.readline()
-                sentence = self._parse_line_to_sentence(
-                    line, self.label_prefix, self.use_tokenizer
-                )
-                return sentence
+            for data_file in self.path_to_folder.iterdir():
+                data_file_name = data_file.name
+                data_file_path = self.path_to_folder / data_file_name
+                data_file_path_str = str(data_file_path)
+                with open(data_file_path_str, encoding="utf-8") as file:
+                    file.seek(self.indices[index])
+                    line = file.readline()
+                    sentence = self._parse_line_to_sentence(
+                        line, self.label_prefix, self.use_tokenizer
+                    )
+                    return sentence
 
 
 class CONLL_03(ColumnCorpus):
