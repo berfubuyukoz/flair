@@ -819,8 +819,7 @@ class ClassificationDataset(FlairDataset):
         for data_file in self.path_to_folder.iterdir():
             data_file_name = data_file.name
             data_file_path = self.path_to_folder / data_file_name
-            data_file_path_str = str(data_file_path)
-            with open(str(path_to_file), encoding="utf-8") as f:
+            with open(str(data_file_path), encoding="utf-8") as f:
                 line = f.readline()
                 position = 0
                 while line:
