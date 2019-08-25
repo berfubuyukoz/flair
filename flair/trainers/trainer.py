@@ -69,7 +69,7 @@ class ModelTrainer:
         monitor_test: bool = False,
         embeddings_storage_mode: str = "cpu",
         checkpoint: bool = False,
-        save_model_period_indicator=-1,
+        save_num_models_per_epoch=-1,
         save_final_model: bool = True,
         anneal_with_restarts: bool = False,
         shuffle: bool = True,
@@ -106,6 +106,21 @@ class ModelTrainer:
         :param sampler: You can pass a data sampler here for special sampling of data.
         :param kwargs: Other arguments for the Optimizer
         :return:
+        """
+        """
+        Model saving:
+        - On each epoch,save save_num_models_per_epoch number of models during training.
+        - If train_with_dev False, at the end of each epoch, save the best model wrt score on dev.
+        - If train_with_dev False and anneal_with_restarts True, upgrade model to the best_model in the beginning of each epoch (where best_model
+        is the one with the highest dev score from the previous epoch.
+        - After training, save final model.
+        
+        If train has 1 epoch, train_with_dev False:
+        - Saves save_num_models_per_epoch number of models
+        - Saves the best_model at the end of the epoch.
+        - Saves the final model of the epoch regardless of its being the best model or not.
+        
+        - So total num of: save_num_models_per_epoch + 2 models are saved.
         """
 
         if self.use_tensorboard:
@@ -176,31 +191,6 @@ class ModelTrainer:
 
         optimizer = self.optimizer(self.model.parameters(), lr=learning_rate, **kwargs)
 
-        '''BertAdam optimizer initialization starts. 
-        One can simply use AdamW instead of uncommenting these lines below. But the two Adams optimizers are not necessarily the same.'''
-        '''
-        train_batch_size = mini_batch_size
-        param_optimizer = list(self.model.named_parameters())
-        no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
-        # Below weight_decay of all parameters except the ones in no_decay list is set to 0.01. No_decay list weight decay is set to 0.
-        optimizer_grouped_parameters = [
-            {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': 0.01},
-            {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
-        ]
-
-        num_train_optimization_steps = int(
-            len(self.corpus.train) / train_batch_size) * max_epochs
-
-        optimizer = BertAdam(optimizer_grouped_parameters,
-                             lr=learning_rate,
-                             t_total=num_train_optimization_steps)
-                             
-        '''
-        '''BertAdam optimizer initialization ends.'''
-
-        optimizer: torch.optim.Optimizer = self.optimizer(
-            self.model.parameters(), lr=learning_rate, **kwargs
-        )
         if self.optimizer_state is not None:
             optimizer.load_state_dict(self.optimizer_state)
 
@@ -282,8 +272,8 @@ class ModelTrainer:
                 seen_batches = 0
                 total_number_of_batches = len(batch_loader)
                 save_model_period = -1
-                if save_model_period_indicator != -1:
-                    save_model_period = (int)(total_number_of_batches / save_model_period_indicator)
+                if save_num_models_per_epoch != -1:
+                    save_model_period = (int)(total_number_of_batches / save_num_models_per_epoch)
                 modulo = max(1, int(total_number_of_batches / 10))
                 # process mini-batches
                 batch_time = 0
@@ -321,9 +311,9 @@ class ModelTrainer:
                         iteration = epoch * total_number_of_batches + batch_no
                         if not param_selection_mode:
                             weight_extractor.extract_weights(self.model.state_dict(), iteration)
-                    if save_model_period != -1 and batch_no % save_model_period == 0:
+                    if (save_model_period != -1) and (batch_no % save_model_period == 0):
                         log.info(f'saving model on batch {batch_no}')
-                        save_model_name = 'saved-model_batch_' + str(batch_no) + '.pt'
+                        save_model_name = 'saved-model_epoch_' + str(epoch+1) + '_batch_' + str(batch_no) + '.pt'
                         self.model.save(base_path / save_model_name)
 
                 train_loss /= seen_batches
