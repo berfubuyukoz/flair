@@ -14,8 +14,6 @@ import flair
 from flair.data import Sentence, Corpus, Token, FlairDataset
 from flair.file_utils import cached_path
 
-from pytorch_transformers.tokenization_bert import BertTokenizer
-
 log = logging.getLogger("flair")
 
 
@@ -191,7 +189,6 @@ class ClassificationCorpus(Corpus):
         max_chars_per_doc: int = -1,
         in_memory: bool = False,
         tokenizer_name: str = 'segtok',
-        tokenizer_model_name_or_path: str = None
     ):
         """
         Instantiates a Corpus from text classification-formatted task data
@@ -242,7 +239,6 @@ class ClassificationCorpus(Corpus):
             max_chars_per_doc=max_chars_per_doc,
             in_memory=in_memory,
             tokenizer_name=tokenizer_name,
-            tokenizer_model_name_or_path=tokenizer_model_name_or_path
         )
         test: Dataset = ClassificationDataset(
             test_folder,
@@ -251,7 +247,6 @@ class ClassificationCorpus(Corpus):
             max_chars_per_doc=max_chars_per_doc,
             in_memory=in_memory,
             tokenizer_name=tokenizer_name,
-            tokenizer_model_name_or_path=tokenizer_model_name_or_path
         )
 
         if dev_folder is not None:
@@ -262,7 +257,6 @@ class ClassificationCorpus(Corpus):
                 max_chars_per_doc=max_chars_per_doc,
                 in_memory=in_memory,
                 tokenizer_name=tokenizer_name,
-                tokenizer_model_name_or_path=tokenizer_model_name_or_path
             )
         else:
             train_length = len(train)
@@ -795,8 +789,7 @@ class ClassificationDataset(FlairDataset):
         max_chars_per_doc=-1,
         use_tokenizer=True,
         in_memory: bool = True,
-        tokenizer_name: str = 'segtok',
-        tokenizer_model_name_or_path: str = None
+        tokenizer_name: str = 'segtok'
     ):
         """
         Reads a data file for text classification. The file should contain one document/text per line.
@@ -818,7 +811,6 @@ class ClassificationDataset(FlairDataset):
         self.in_memory = in_memory
         self.use_tokenizer = use_tokenizer
         self.tokenizer_name = tokenizer_name
-        self.tokenizer_model_name_or_path = tokenizer_model_name_or_path
 
         if self.in_memory:
             self.sentences = []
@@ -831,10 +823,6 @@ class ClassificationDataset(FlairDataset):
 
         self.path_to_folder = path_to_folder
 
-        tokenizer = None
-        if self.use_tokenizer and (self.tokenizer_name == 'bert'):
-            tokenizer = BertTokenizer.from_pretrained(self.tokenizer_model_name_or_path)
-            # tokenizer = BertTokenizer.from_pretrained(tokenizer_model_name_or_path, max_len=max_tokens_per_doc)
         for data_file in self.path_to_folder.iterdir():
             data_file_name = data_file.name
             data_file_path = self.path_to_folder / data_file_name
@@ -851,8 +839,7 @@ class ClassificationDataset(FlairDataset):
                     if self.in_memory:
                         sentence = self._parse_line_to_sentence(
                             line, self.label_prefix, use_tokenizer,
-                            tokenizer_name=self.tokenizer_name,
-                            tokenizer=tokenizer
+                            tokenizer_name=self.tokenizer_name
                         )
                         if sentence is not None and len(sentence.tokens) > 0:
                             self.sentences.append(sentence)
@@ -866,8 +853,7 @@ class ClassificationDataset(FlairDataset):
 
     def _parse_line_to_sentence(
         self, line: str, label_prefix: str, use_tokenizer: bool = True,
-        tokenizer_name: str = 'segtok',
-        tokenizer=None
+        tokenizer_name: str = 'segtok'
     ):
         words = line.split()
 
@@ -890,8 +876,7 @@ class ClassificationDataset(FlairDataset):
         if text and labels:
             labels = ['0' if l == '2' else l for l in labels]
             sentence = Sentence(text, labels=labels, use_tokenizer=use_tokenizer,
-                                tokenizer_name=tokenizer_name,
-                                tokenizer=tokenizer
+                                tokenizer_name=tokenizer_name
                                 )
 
             if (
@@ -899,15 +884,7 @@ class ClassificationDataset(FlairDataset):
                 and len(sentence) > self.max_tokens_per_doc
                 and self.max_tokens_per_doc > 0
             ):
-                if tokenizer_name == 'bert':
-                    tokens = sentence.tokens[:self.max_tokens_per_doc - 2]  # CLS and SEP are excluded from the count.
-                    # add [CLS] and [SEP] tokens at the ends.
-                    cls_start_pos = tokens[0].idx - 1
-                    sep_start_pos = tokens[-1].idx + 1
-                    sentence.tokens = [Token("[CLS]", start_position=cls_start_pos)] + tokens + [
-                        Token("[SEP]", start_position=sep_start_pos)]
-                else:
-                    sentence.tokens = sentence.tokens[:self.max_tokens_per_doc]
+                sentence.tokens = sentence.tokens[:self.max_tokens_per_doc]
 
             return sentence
         return None
