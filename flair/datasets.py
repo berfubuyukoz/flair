@@ -187,8 +187,7 @@ class ClassificationCorpus(Corpus):
         use_tokenizer: bool = True,
         max_tokens_per_doc: int = -1,
         max_chars_per_doc: int = -1,
-        in_memory: bool = False,
-        tokenizer_name: str = 'segtok',
+        in_memory: bool = False
     ):
         """
         Instantiates a Corpus from text classification-formatted task data
@@ -237,16 +236,14 @@ class ClassificationCorpus(Corpus):
             use_tokenizer=use_tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
             max_chars_per_doc=max_chars_per_doc,
-            in_memory=in_memory,
-            tokenizer_name=tokenizer_name,
+            in_memory=in_memory
         )
         test: Dataset = ClassificationDataset(
             test_folder,
             use_tokenizer=use_tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
             max_chars_per_doc=max_chars_per_doc,
-            in_memory=in_memory,
-            tokenizer_name=tokenizer_name,
+            in_memory=in_memory
         )
 
         if dev_folder is not None:
@@ -255,8 +252,7 @@ class ClassificationCorpus(Corpus):
                 use_tokenizer=use_tokenizer,
                 max_tokens_per_doc=max_tokens_per_doc,
                 max_chars_per_doc=max_chars_per_doc,
-                in_memory=in_memory,
-                tokenizer_name=tokenizer_name,
+                in_memory=in_memory
             )
         else:
             train_length = len(train)
