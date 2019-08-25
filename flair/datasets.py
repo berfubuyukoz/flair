@@ -789,7 +789,6 @@ class ClassificationDataset(FlairDataset):
         max_chars_per_doc=-1,
         use_tokenizer=True,
         in_memory: bool = True,
-        tokenizer_name: str = 'segtok'
     ):
         """
         Reads a data file for text classification. The file should contain one document/text per line.
@@ -810,8 +809,6 @@ class ClassificationDataset(FlairDataset):
 
         self.in_memory = in_memory
         self.use_tokenizer = use_tokenizer
-        self.tokenizer_name = tokenizer_name
-
         if self.in_memory:
             self.sentences = []
         else:
@@ -838,8 +835,7 @@ class ClassificationDataset(FlairDataset):
 
                     if self.in_memory:
                         sentence = self._parse_line_to_sentence(
-                            line, self.label_prefix, use_tokenizer,
-                            tokenizer_name=self.tokenizer_name
+                            line, self.label_prefix, use_tokenizer
                         )
                         if sentence is not None and len(sentence.tokens) > 0:
                             self.sentences.append(sentence)
@@ -852,8 +848,7 @@ class ClassificationDataset(FlairDataset):
                     line = f.readline()
 
     def _parse_line_to_sentence(
-        self, line: str, label_prefix: str, use_tokenizer: bool = True,
-        tokenizer_name: str = 'segtok'
+        self, line: str, label_prefix: str, use_tokenizer: bool = True
     ):
         words = line.split()
 
@@ -876,7 +871,6 @@ class ClassificationDataset(FlairDataset):
         if text and labels:
             labels = ['0' if l == '2' else l for l in labels]
             sentence = Sentence(text, labels=labels, use_tokenizer=use_tokenizer,
-                                tokenizer_name=tokenizer_name
                                 )
 
             if (
