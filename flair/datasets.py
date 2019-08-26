@@ -802,6 +802,7 @@ class ClassificationDataset(FlairDataset):
         assert path_to_folder.exists()
 
         self.label_prefix = "__label__"
+        self.id_prefix = "__id__"
 
         self.in_memory = in_memory
         self.use_tokenizer = use_tokenizer
@@ -830,7 +831,7 @@ class ClassificationDataset(FlairDataset):
 
                     if self.in_memory:
                         sentence = self._parse_line_to_sentence(
-                            line, self.label_prefix, use_tokenizer
+                            line, self.label_prefix, self.id_prefix, use_tokenizer
                         )
                         if sentence is not None and len(sentence.tokens) > 0:
                             self.sentences.append(sentence)
@@ -843,7 +844,7 @@ class ClassificationDataset(FlairDataset):
                     line = f.readline()
 
     def _parse_line_to_sentence(
-        self, line: str, label_prefix: str, use_tokenizer: bool = True
+        self, line: str, label_prefix: str, id_prefix: str, use_tokenizer: bool = True
     ):
         words = line.split()
 
@@ -858,15 +859,25 @@ class ClassificationDataset(FlairDataset):
             else:
                 break
 
-        text = line[l_len:].strip()
+        line_wo_labels = line[l_len:].strip()
+        words_wo_labels = line_wo_labels.split()
+
+        id_len = 0
+        id = ""
+        for i in range(len(words_wo_labels)):
+            if words_wo_labels[i].startswith(id_prefix):
+                id_len += len(words_wo_labels[i]) + 1
+                id = words_wo_labels[i].replace(id_prefix, "")
+                break
+
+        text = line_wo_labels[id_len:].strip()
 
         if self.max_chars_per_doc > 0:
             text = text[: self.max_chars_per_doc]
 
         if text and labels:
             labels = ['0' if l == '2' else l for l in labels]
-            sentence = Sentence(text, labels=labels, use_tokenizer=use_tokenizer,
-                                )
+            sentence = Sentence(id=id, text=text, labels=labels, use_tokenizer=use_tokenizer)
 
             if (
                 sentence is not None

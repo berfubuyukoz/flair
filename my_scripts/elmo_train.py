@@ -2,7 +2,7 @@
 import sys
 #sys.path.insert(0, '/Users/buyukozb/git/thesis/mylibs')
 from flair.embeddings import *
-from flair.data_fetcher import *
+from flair.datasets import *
 from pathlib import Path
 #BERT_BASE_DIR="/Users/buyukozb/Desktop/berfu/thesis/data/embedding_data/uncased_L-12_H-768_A-12"
 BERT_MODEL_NAME = 'bert-base-uncased'
@@ -53,10 +53,21 @@ for token in sentence:
 
 TEST_DATA_DIR_EDITED = '/Users/buyukozb/git/berfu/thesis/data/all_data/india/flair_formatted'
 test_data_folder = Path(TEST_DATA_DIR_EDITED)
-test_data_folder = test_data_folder / 'random'
-test_sentences = NLPTaskDataFetcher.load_sentences_from_data(test_data_folder, max_seq_len=128)
-test_sentences_pred = test_sentences.copy()
-actual_labels = [s.labels[0].value for s in test_sentences]
+test_data_folder = test_data_folder / 'dev'
+
+test_dataset = ClassificationDataset(
+            test_data_folder,
+            use_tokenizer=False,
+            max_tokens_per_doc=MAX_SEQ_LEN,
+            in_memory=True
+        )
+
+test_sentences = test_dataset.sentences # url : http
+
+#
+# test_sentences = NLPTaskDataFetcher.load_sentences_from_data(test_data_folder, max_seq_len=128)
+# test_sentences_pred = test_sentences.copy()
+# actual_labels = [s.labels[0].value for s in test_sentences]
 
 
 '''
