@@ -1258,7 +1258,9 @@ class XLNetEmbeddings(TokenEmbeddings):
 
         dummy_sentence: Sentence = Sentence()
         dummy_sentence.add_token(Token("hello"))
+        log.info(f'Dummy sentence embedding starts...')
         embedded_dummy = self.embed(dummy_sentence)
+        log.info(f'Dummy sentence embedding ends...')
         self.__embedding_length: int = len(
             embedded_dummy[0].get_token(1).get_embedding()
         )
