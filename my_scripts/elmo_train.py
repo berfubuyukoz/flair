@@ -1,6 +1,7 @@
 # The sentence objects holds a sentence that we may want to embed or tag
 import sys
 #sys.path.insert(0, '/Users/buyukozb/git/thesis/mylibs')
+
 from flair.embeddings import *
 from flair.datasets import *
 from pathlib import Path
