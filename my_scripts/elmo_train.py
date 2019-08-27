@@ -4,14 +4,87 @@ import sys
 from flair.embeddings import *
 from flair.datasets import *
 from pathlib import Path
+from flair.models import TextClassifier
+from flair.trainers import ModelTrainer
+
 #BERT_BASE_DIR="/Users/buyukozb/Desktop/berfu/thesis/data/embedding_data/uncased_L-12_H-768_A-12"
-BERT_MODEL_NAME = 'bert-base-uncased'
-TOKENIZER_NAME = 'bert'
+# DEV_SIZE = 0
+# TOKENIZER_NAME = 'bert'
+
+MODEL_NAME = 'xlnet-base-cased'
 MAX_SEQ_LEN = 128
 DATA_FOLDER = Path('/Users/buyukozb/git/berfu/thesis/data/all_data/india/flair_formatted')
 TRAIN_FOLDER_NAME = 'train'
+DEV_FOLDER_NAME = 'dev'
 TEST_FOLDER_NAME = 'test'
-DEV_SIZE = 0
+EMBEDDING = 'xlnet'
+FINETUNE_EMBEDDINGS = False
+
+#Train params
+MAX_EPOCHS = 1
+LEARNING_RATE = 0.1
+BATCH_SIZE = 32
+ANNEAL_FACTOR = 0.5
+ANNEAL_W_RESTARTS = True # Update model at the start of an epoch to the best model received from the previous epoch (wrt scores on dev set)
+PATIENCE = 5
+IN_MEMORY = True #If False, token embeddings are created on the go during training.
+DEV_EVAL = True #Report score on dev at the end of each epoch. This will also cause to save best model at the end of each epoch wrt score on dev set.
+SAVE_FINAL_MODEL = True #Save the model when training is over.
+SAVE_NUM_MODELS_PER_EPOCH = 3
+
+
+print("Loading embeddings.")
+# 3. make a list of word embeddings
+if EMBEDDING == 'elmo': embedding = ELMoEmbeddings(model=MODEL_NAME)
+elif EMBEDDING == 'bert': embedding = BertEmbeddings(bert_model_or_path=MODEL_NAME)
+elif EMBEDDING == 'xlnet': embedding = XLNetEmbeddings(pretrained_model_name_or_path=MODEL_NAME)
+else: print("Embedding name is not defined: {}".format(EMBEDDING))
+
+print("Loading dataset.")
+data_folder = Path(DATA_FOLDER)
+#by default takes documents as a whole unless max_tokens_per_doc is specified.
+corpus = ClassificationCorpus(data_folder=data_folder,
+                              train_folder_name=TRAIN_FOLDER_NAME,
+                              test_folder_name=TEST_FOLDER_NAME,
+                              dev_folder_name=DEV_FOLDER_NAME,
+                              max_tokens_per_doc=MAX_SEQ_LEN,
+                              in_memory=IN_MEMORY,
+                              use_tokenizer=False)# in_memory=True
+
+# 2. create the label dictionary
+label_dict = corpus.make_label_dictionary()
+label_dict.item2idx
+
+print("Making embeddings untrainable.")
+#make Embeddings untrainable.
+if not FINETUNE_EMBEDDINGS:
+  if EMBEDDING == 'elmo':
+    for param in embedding.ee.elmo_bilm.parameters():
+        param.requires_grad = False
+  elif EMBEDDING == 'bert':
+    for param in embedding.model.parameters():
+        param.requires_grad = False
+  elif EMBEDDING == 'xlnet':
+    for param in embedding.model.parameters():
+        param.requires_grad = False
+
+document_embeddings = DocumentPoolEmbeddings([embedding])
+classifier = TextClassifier(document_embeddings, label_dictionary=label_dict, multi_label=False)
+trainer = ModelTrainer(classifier, corpus)
+
+print("Training starts.")
+trainer.train(base_path=data_folder,
+              learning_rate=LEARNING_RATE,
+              mini_batch_size=BATCH_SIZE,
+              anneal_factor=ANNEAL_FACTOR,
+              anneal_with_restarts=ANNEAL_W_RESTARTS,
+              patience=PATIENCE,
+              max_epochs=MAX_EPOCHS,
+              save_num_models_per_epoch=SAVE_NUM_MODELS_PER_EPOCH,
+              train_with_dev= not DEV_EVAL,
+              save_final_model=SAVE_FINAL_MODEL
+              )
+
 '''
 # create a sentence
 sentence = Sentence('The grass is green .')

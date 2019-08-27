@@ -228,7 +228,7 @@ class ClassificationCorpus(Corpus):
 
         log.info("Reading data from {}".format(data_folder))
         log.info("Train: {}".format(train_folder))
-        log.info("Dev: {}".format(dev_folder))
+        if dev_folder_name is not None: log.info("Test: {}".format(dev_folder))
         log.info("Test: {}".format(test_folder))
 
         train: Dataset = ClassificationDataset(

@@ -974,8 +974,12 @@ def _extract_embeddings(
     """
     subtoken_embeddings: List[torch.FloatTensor] = []
 
+    log.info(f"Num layers: '{len(layers)}'")
     for layer in layers:
+        log.info(f"subword_start_idx: '{subword_start_idx}'")
+        log.info(f"subword_end_idx: '{subword_end_idx}'")
         current_embeddings = hidden_states[layer][0][subword_start_idx:subword_end_idx]
+        log.info(f"len current_embeddings: '{len(current_embeddings)}'")
 
         first_embedding: torch.FloatTensor = current_embeddings[0]
         if pooling_operation == "first_last":
