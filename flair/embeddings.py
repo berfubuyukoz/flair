@@ -981,6 +981,8 @@ def _extract_embeddings(
             first_embedding: torch.FloatTensor = current_embeddings[0]
         except:
             log.info(f'current_embeddings list len: ."{len(current_embeddings)}"')
+            log.info(f'subword start idx: "{subword_start_idx}')
+            log.info(f'subword end idx: "{subword_end_idx}')
 
         if pooling_operation == "first_last":
             last_embedding: torch.FloatTensor = current_embeddings[-1]
@@ -1154,7 +1156,10 @@ def _get_transformer_sentence_embeddings(
                 offset = 1
 
             for token in sentence.tokens:
-                len_subwords = token_subwords_mapping[token.idx]
+                try:
+                    len_subwords = token_subwords_mapping[token.idx]
+                except:
+                    log.info(f'Token subwards mapping length cannot be retrieved.')
                 subtoken_embeddings = _extract_embeddings(
                     hidden_states=hidden_states,
                     layers=layers,
