@@ -609,11 +609,13 @@ class MuseCrosslingualEmbeddings(TokenEmbeddings):
 
         for i, sentence in enumerate(sentences):
 
-            if self.language_code is not None:
+            if self.language_code is None:
                 language_code = sentence.get_language_code()
 
                 if language_code not in self.language_embeddings:
                     self.load_language_model(language_code)
+            else:
+                language_code = self.language_code
 
             current_embedding_model = self.language_embeddings[language_code]
 
