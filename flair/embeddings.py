@@ -947,7 +947,8 @@ def _extract_embeddings(
     subword_start_idx: int,
     subword_end_idx: int,
     use_scalar_mix: bool = False,
-) -> List[torch.FloatTensor]:
+    sentence_id: str = None,
+    token_text: str = None) -> List[torch.FloatTensor]:
     """
     Extracts subword embeddings from specified layers from hidden states.
     :param hidden_states: list of hidden states from model
@@ -969,6 +970,8 @@ def _extract_embeddings(
             log.info(f'current_embeddings list len: ."{len(current_embeddings)}"')
             log.info(f'subword start idx: "{subword_start_idx}"')
             log.info(f'subword end idx: "{subword_end_idx}"')
+            log.info(f'sentence id: "{sentence_id}"')
+            log.info(f'token text: "{token_text}"')
 
         if pooling_operation == "first_last":
             last_embedding: torch.FloatTensor = current_embeddings[-1]
@@ -1104,11 +1107,6 @@ def _get_transformer_sentence_embeddings(
             for token in sentence.tokens:
                 len_subwords = token_subwords_mapping[token.idx]
 
-                if len_subwords==0:
-                    log.info(f'Sentence subword count: "{len_subwords}"')
-                    log.info(f'Sentence id: "{sentence.id}"')
-                    log.info(f'Token text: "{token.text}"')
-
                 subtoken_embeddings = _extract_embeddings(
                     hidden_states=hidden_states,
                     layers=layers,
@@ -1116,6 +1114,8 @@ def _get_transformer_sentence_embeddings(
                     subword_start_idx=offset,
                     subword_end_idx=offset + len_subwords,
                     use_scalar_mix=use_scalar_mix,
+                    sentence_id=sentence.id,
+                    token_text=token.text
                 )
 
                 offset += len_subwords
