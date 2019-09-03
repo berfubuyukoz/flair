@@ -1155,7 +1155,7 @@ def _get_transformer_sentence_embeddings(
                 offset = 1
 
             for token in sentence.tokens:
-                len_subwords = len(subwords)
+                len_subwords = token_subwords_mapping[token.idx]
 
                 if len_subwords==0:
                     log.info(f'Sentence subword count: "{len_subwords}"')
