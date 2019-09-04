@@ -844,7 +844,7 @@ class ClassificationDataset(FlairDataset):
         __label__<class_name> <text>
         If you have a multi class task, you can have as many labels as you want at the beginning of the line, e.g.,
         __label__<class_name_1> __label__<class_name_2> <text>
-        :param path_to_file: the path to the data file
+        :param path_to_folder: the path to the data folder
         :param max_tokens_per_doc: Takes at most this amount of tokens per document. If set to -1 all documents are taken as is.
         :param max_tokens_per_doc: If set, truncates each Sentence to a maximum number of Tokens
         :param max_chars_per_doc: If set, truncates each Sentence to a maximum number of chars
@@ -853,9 +853,9 @@ class ClassificationDataset(FlairDataset):
         :return: list of sentences
         """
         if type(path_to_folder) == str:
-            path_to_file: Path = Path(path_to_folder)
+            path_to_folder: Path = Path(path_to_folder)
 
-        assert path_to_file.exists()
+        assert path_to_folder.exists()
 
         self.label_prefix = "__label__"
         self.id_prefix = "__id__"
@@ -957,7 +957,7 @@ class ClassificationDataset(FlairDataset):
         if self.in_memory:
             return self.sentences[index]
         else:
-
+            # This part won't work since data is ead from a folder, not a file.
             with open(str(self.path_to_file), encoding="utf-8") as file:
                 file.seek(self.indices[index])
                 line = file.readline()
