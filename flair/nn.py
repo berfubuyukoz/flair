@@ -85,6 +85,28 @@ class Model(torch.nn.Module):
         torch.save(model_state, str(model_file), pickle_protocol=4)
 
     @classmethod
+    def load_from_file(cls, model_file: Union[str, Path]):
+        """
+        Loads the model from the given file.
+        :param model_file: the model file
+        :return: the loaded text classifier model
+        """
+
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore")
+            # load_big_file is a workaround by https://github.com/highway11git to load models on some Mac/Windows setups
+            # see https://github.com/zalandoresearch/flair/issues/351
+            f = flair.file_utils.load_big_file(str(model_file))
+            state = torch.load(f, map_location=flair.device)
+
+        model = cls._init_model_with_state_dict(state)
+
+        model.eval()
+        model.to(flair.device)
+
+        return model
+
+    @classmethod
     def load(cls, model: Union[str, Path]):
         """
         Loads the model from the given file.
