@@ -344,6 +344,7 @@ class Sentence(DataPoint):
 
     def __init__(
         self,
+        id: str = None,
         text: str = None,
         use_tokenizer: bool = False,
         labels: Union[List[Label], List[str]] = None,
@@ -361,6 +362,8 @@ class Sentence(DataPoint):
         self._embeddings: Dict = {}
 
         self.language_code: str = language_code
+
+        self.id = id
 
         # if text is passed, instantiate sentence with tokens (words)
         if text is not None:
