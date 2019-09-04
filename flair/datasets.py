@@ -186,9 +186,10 @@ class ClassificationCorpus(Corpus):
     def __init__(
         self,
         data_folder: Union[str, Path],
-        train_file=None,
-        test_file=None,
-        dev_file=None,
+        train_folder_name=None,
+        test_folder_name=None,
+        dev_folder_name=None,
+        dev_split_size: float = 0.1,
         use_tokenizer: bool = True,
         max_tokens_per_doc: int = -1,
         max_chars_per_doc: int = -1,
@@ -211,60 +212,62 @@ class ClassificationCorpus(Corpus):
         if type(data_folder) == str:
             data_folder: Path = Path(data_folder)
 
-        if train_file is not None:
-            train_file = data_folder / train_file
-        if test_file is not None:
-            test_file = data_folder / test_file
-        if dev_file is not None:
-            dev_file = data_folder / dev_file
+        if train_folder_name is not None:
+            train_folder = data_folder / train_folder_name
+        if test_folder_name is not None:
+            test_folder = data_folder / test_folder_name
+        if dev_folder_name is not None:
+            dev_folder = data_folder / dev_folder_name
+        else:
+            dev_folder = None
 
         # automatically identify train / test / dev files
-        if train_file is None:
-            for file in data_folder.iterdir():
-                file_name = file.name
-                if "train" in file_name:
-                    train_file = file
-                if "test" in file_name:
-                    test_file = file
-                if "dev" in file_name:
-                    dev_file = file
-                if "testa" in file_name:
-                    dev_file = file
-                if "testb" in file_name:
-                    test_file = file
+        if train_folder_name is None:
+            for foldr in data_folder.iterdir():
+                foldr_name = foldr.name
+                if 'train' in foldr_name:
+                    train_folder = foldr
+                if 'test' in foldr_name:
+                    test_folder = foldr
+                if 'dev' in foldr_name:
+                    dev_folder = foldr
+                if 'testa' in foldr_name:
+                    dev_folder = foldr
+                if 'testb' in foldr_name:
+                    test_folder = foldr
 
         log.info("Reading data from {}".format(data_folder))
-        log.info("Train: {}".format(train_file))
-        log.info("Dev: {}".format(dev_file))
-        log.info("Test: {}".format(test_file))
+        log.info("Train: {}".format(train_folder))
+        if dev_folder_name is not None: log.info("Test: {}".format(dev_folder))
+        log.info("Test: {}".format(test_folder))
 
         train: Dataset = ClassificationDataset(
-            train_file,
+            train_folder,
             use_tokenizer=use_tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
             max_chars_per_doc=max_chars_per_doc,
-            in_memory=in_memory,
+            in_memory=in_memory
         )
         test: Dataset = ClassificationDataset(
-            test_file,
+            test_folder,
             use_tokenizer=use_tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
             max_chars_per_doc=max_chars_per_doc,
-            in_memory=in_memory,
+            in_memory=in_memory
         )
 
-        if dev_file is not None:
+        if dev_folder is not None:
             dev: Dataset = ClassificationDataset(
-                dev_file,
+                dev_folder,
                 use_tokenizer=use_tokenizer,
                 max_tokens_per_doc=max_tokens_per_doc,
                 max_chars_per_doc=max_chars_per_doc,
-                in_memory=in_memory,
+                in_memory=in_memory
             )
         else:
             train_length = len(train)
-            dev_size: int = round(train_length / 10)
-            splits = random_split(train, [train_length - dev_size, dev_size])
+            dev_length: int = round(train_length * dev_split_size)
+            splits = random_split(train, [train_length - dev_length, dev_length])
             train = splits[0]
             dev = splits[1]
 
@@ -829,7 +832,7 @@ class CSVClassificationDataset(FlairDataset):
 class ClassificationDataset(FlairDataset):
     def __init__(
         self,
-        path_to_file: Union[str, Path],
+        path_to_folder: Union[str, Path],
         max_tokens_per_doc=-1,
         max_chars_per_doc=-1,
         use_tokenizer=True,
@@ -849,12 +852,13 @@ class ClassificationDataset(FlairDataset):
         :param in_memory: If True, keeps dataset as Sentences in memory, otherwise only keeps strings
         :return: list of sentences
         """
-        if type(path_to_file) == str:
-            path_to_file: Path = Path(path_to_file)
+        if type(path_to_folder) == str:
+            path_to_file: Path = Path(path_to_folder)
 
         assert path_to_file.exists()
 
         self.label_prefix = "__label__"
+        self.id_prefix = "__id__"
 
         self.in_memory = in_memory
         self.use_tokenizer = use_tokenizer
@@ -868,33 +872,36 @@ class ClassificationDataset(FlairDataset):
         self.max_chars_per_doc = max_chars_per_doc
         self.max_tokens_per_doc = max_tokens_per_doc
 
-        self.path_to_file = path_to_file
+        self.path_to_folder = path_to_folder
 
-        with open(str(path_to_file), encoding="utf-8") as f:
-            line = f.readline()
-            position = 0
-            while line:
-                if "__label__" not in line or " " not in line:
+        for data_file in self.path_to_folder.iterdir():
+            data_file_name = data_file.name
+            data_file_path = self.path_to_folder / data_file_name
+            with open(str(data_file_path), encoding="utf-8") as f:
+                line = f.readline()
+                position = 0
+                while line:
+                    if "__label__" not in line or " " not in line:
+                        position = f.tell()
+                        line = f.readline()
+                        continue
+
+                    if self.in_memory:
+                        sentence = self._parse_line_to_sentence(
+                            line, self.label_prefix, self.id_prefix, use_tokenizer
+                        )
+                        if sentence is not None and len(sentence.tokens) > 0:
+                            self.sentences.append(sentence)
+                            self.total_sentence_count += 1
+                    else:
+                        self.indices.append(position)
+                        self.total_sentence_count += 1
+
                     position = f.tell()
                     line = f.readline()
-                    continue
-
-                if self.in_memory:
-                    sentence = self._parse_line_to_sentence(
-                        line, self.label_prefix, use_tokenizer
-                    )
-                    if sentence is not None and len(sentence.tokens) > 0:
-                        self.sentences.append(sentence)
-                        self.total_sentence_count += 1
-                else:
-                    self.indices.append(position)
-                    self.total_sentence_count += 1
-
-                position = f.tell()
-                line = f.readline()
 
     def _parse_line_to_sentence(
-        self, line: str, label_prefix: str, use_tokenizer: bool = True
+        self, line: str, label_prefix: str, id_prefix: str, use_tokenizer: bool = True
     ):
         words = line.split()
 
@@ -909,23 +916,36 @@ class ClassificationDataset(FlairDataset):
             else:
                 break
 
-        text = line[l_len:].strip()
+        line_wo_labels = line[l_len:].strip()
+        words_wo_labels = line_wo_labels.split()
+
+        id_len = 0
+        id = ""
+        for i in range(len(words_wo_labels)):
+            if words_wo_labels[i].startswith(id_prefix):
+                id_len += len(words_wo_labels[i]) + 1
+                id = words_wo_labels[i].replace(id_prefix, "")
+                break
+
+        text = line_wo_labels[id_len:].strip()
 
         if self.max_chars_per_doc > 0:
             text = text[: self.max_chars_per_doc]
 
         if text and labels:
-            sentence = Sentence(text, labels=labels, use_tokenizer=use_tokenizer)
+            labels = ['0' if l == '2' else l for l in labels]
+            sentence = Sentence(id=id, text=text, labels=labels, use_tokenizer=use_tokenizer)
 
             if (
                 sentence is not None
                 and len(sentence) > self.max_tokens_per_doc
                 and self.max_tokens_per_doc > 0
             ):
-                sentence.tokens = sentence.tokens[: self.max_tokens_per_doc]
+                sentence.tokens = sentence.tokens[:self.max_tokens_per_doc]
 
             return sentence
         return None
+
 
     def is_in_memory(self) -> bool:
         return self.in_memory
