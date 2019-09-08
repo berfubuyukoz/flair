@@ -65,6 +65,7 @@ class ModelTrainer:
     def train(
         self,
         base_path: Union[Path, str],
+        checkpointed_from: Union[Path, str] = None,
         learning_rate: float = 0.1,
         mini_batch_size: int = 32,
         eval_mini_batch_size: int = None,
@@ -150,6 +151,9 @@ class ModelTrainer:
         log_line(log)
         log.info(f'Model: "{self.model}"')
         log_line(log)
+        if checkpointed_from is not None:
+            log.info(f'Checkpointed from: "{checkpointed_from}"')
+            log.line(log)
         log.info(f'Corpus: "{self.corpus}"')
         log_line(log)
         log.info("Parameters:")

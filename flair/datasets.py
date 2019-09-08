@@ -248,13 +248,15 @@ class ClassificationCorpus(Corpus):
             max_chars_per_doc=max_chars_per_doc,
             in_memory=in_memory
         )
-        test: Dataset = ClassificationDataset(
-            test_folder,
-            use_tokenizer=use_tokenizer,
-            max_tokens_per_doc=max_tokens_per_doc,
-            max_chars_per_doc=max_chars_per_doc,
-            in_memory=in_memory
-        )
+
+        if test_folder is not None:
+            test: Dataset = ClassificationDataset(
+                test_folder,
+                use_tokenizer=use_tokenizer,
+                max_tokens_per_doc=max_tokens_per_doc,
+                max_chars_per_doc=max_chars_per_doc,
+                in_memory=in_memory
+            )
 
         if dev_folder is not None:
             dev: Dataset = ClassificationDataset(
