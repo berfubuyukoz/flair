@@ -932,7 +932,7 @@ class Corpus:
         return "Corpus: %d train + %d dev + %d test sentences" % (
             len(self.train),
             len(self.dev),
-            len(self.test),
+            len(self.test) if test is not None else 0,
         )
 
     def make_label_dictionary(self) -> Dictionary:
