@@ -216,6 +216,8 @@ class ClassificationCorpus(Corpus):
             train_folder = data_folder / train_folder_name
         if test_folder_name is not None:
             test_folder = data_folder / test_folder_name
+        else: 
+            test_folder = None
         if dev_folder_name is not None:
             dev_folder = data_folder / dev_folder_name
         else:
