@@ -259,6 +259,8 @@ class ClassificationCorpus(Corpus):
                 max_chars_per_doc=max_chars_per_doc,
                 in_memory=in_memory
             )
+        else:
+            test = None
 
         if dev_folder is not None:
             dev: Dataset = ClassificationDataset(
