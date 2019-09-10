@@ -153,7 +153,7 @@ class ModelTrainer:
         log_line(log)
         if checkpointed_from is not None:
             log.info(f'Checkpointed from: "{checkpointed_from}"')
-            log.line(log)
+            log_line(log)
         log.info(f'Corpus: "{self.corpus}"')
         log_line(log)
         log.info("Parameters:")
