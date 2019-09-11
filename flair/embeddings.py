@@ -946,7 +946,7 @@ def _extract_embeddings(
     subword_start_idx: int,
     subword_end_idx: int,
     use_scalar_mix: bool = False,
-    token_no: int,
+    token_no: int = -1,
     sentence_id: str = None,
     token_text: str = None
 ) -> List[torch.FloatTensor]:
