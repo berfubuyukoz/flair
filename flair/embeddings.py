@@ -946,6 +946,9 @@ def _extract_embeddings(
     subword_start_idx: int,
     subword_end_idx: int,
     use_scalar_mix: bool = False,
+    token_no: int,
+    sentence_id: str = None,
+    token_text: str = None
 ) -> List[torch.FloatTensor]:
     """
     Extracts subword embeddings from specified layers from hidden states.
@@ -961,6 +964,13 @@ def _extract_embeddings(
 
     for layer in layers:
         current_embeddings = hidden_states[layer][0][subword_start_idx:subword_end_idx]
+        if len(current_embeddings) == 0:
+            log.info(f'current_embeddings list len: "{len(current_embeddings)}"')
+            log.info(f'sentence id: "{sentence_id}"')
+            log.info(f'token no inside sentence: "{token_no}"')
+            log.info(f'token text: "{token_text}"')
+            log.info(f'subword start idx: "{subword_start_idx}"')
+            log.info(f'subword end idx: "{subword_end_idx}"')
 
         first_embedding: torch.FloatTensor = current_embeddings[0]
         if pooling_operation == "first_last":
@@ -1094,7 +1104,7 @@ def _get_transformer_sentence_embeddings(
 
             hidden_states = model(tokens_tensor)[-1]
 
-            for token in sentence.tokens:
+            for token_no, token in enumerate(sentence.tokens):
                 len_subwords = token_subwords_mapping[token.idx]
 
                 subtoken_embeddings = _extract_embeddings(
@@ -1104,7 +1114,11 @@ def _get_transformer_sentence_embeddings(
                     subword_start_idx=offset,
                     subword_end_idx=offset + len_subwords,
                     use_scalar_mix=use_scalar_mix,
+                    sentence_id=sentence.id,
+                    token_no=token_no,
+                    token_text=token.text
                 )
+
 
                 offset += len_subwords
 
@@ -1236,7 +1250,6 @@ class XLNetEmbeddings(TokenEmbeddings):
 
     def __str__(self):
         return self.name
-
 
 class XLMEmbeddings(TokenEmbeddings):
     def __init__(
