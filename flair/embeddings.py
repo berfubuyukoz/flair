@@ -947,6 +947,7 @@ def _extract_embeddings(
     subword_end_idx: int,
     use_scalar_mix: bool = False,
     token_no: int = -1,
+    num_tokens_sentence: int = 0,
     sentence_id: str = None,
     token_text: str = None
 ) -> List[torch.FloatTensor]:
@@ -971,6 +972,7 @@ def _extract_embeddings(
             log.info(f'hidden state layer first index len: "{len(hidden_states[layer][0])}"')
             log.info(f'current_embeddings list len: "{len(current_embeddings)}"')
             log.info(f'sentence id: "{sentence_id}"')
+            log.info(f'num tokens of sentence: "{num_tokens_sentence}"')
             log.info(f'token no inside sentence: "{token_no}"')
             log.info(f'token text: "{token_text}"')
             log.info(f'subword start idx: "{subword_start_idx}"')
@@ -1117,6 +1119,7 @@ def _get_transformer_sentence_embeddings(
                     subword_start_idx=offset,
                     subword_end_idx=offset + len_subwords,
                     use_scalar_mix=use_scalar_mix,
+                    num_tokens_sentence=len(sentence.tokens)
                     sentence_id=sentence.id,
                     token_no=token_no,
                     token_text=token.text
