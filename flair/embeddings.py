@@ -964,7 +964,10 @@ def _extract_embeddings(
 
     for layer in layers:
         current_embeddings = hidden_states[layer][0][subword_start_idx:subword_end_idx]
-        if len(current_embeddings) == 0:
+
+        try:
+            first_embedding: torch.FloatTensor = current_embeddings[0]
+        except:
             log.info(f'current_embeddings list len: "{len(current_embeddings)}"')
             log.info(f'sentence id: "{sentence_id}"')
             log.info(f'token no inside sentence: "{token_no}"')
@@ -972,7 +975,6 @@ def _extract_embeddings(
             log.info(f'subword start idx: "{subword_start_idx}"')
             log.info(f'subword end idx: "{subword_end_idx}"')
 
-        first_embedding: torch.FloatTensor = current_embeddings[0]
         if pooling_operation == "first_last":
             last_embedding: torch.FloatTensor = current_embeddings[-1]
             final_embedding: torch.FloatTensor = torch.cat(
