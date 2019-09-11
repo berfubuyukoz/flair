@@ -968,6 +968,7 @@ def _extract_embeddings(
         try:
             first_embedding: torch.FloatTensor = current_embeddings[0]
         except:
+            log.info(f'hidden state layer first index len: "{len(hidden_states[layer][0])}"')
             log.info(f'current_embeddings list len: "{len(current_embeddings)}"')
             log.info(f'sentence id: "{sentence_id}"')
             log.info(f'token no inside sentence: "{token_no}"')
