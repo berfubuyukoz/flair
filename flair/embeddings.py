@@ -1116,11 +1116,12 @@ def _get_transformer_sentence_embeddings(
             tokens_tensor = torch.tensor([indexed_tokens])
             tokens_tensor = tokens_tensor.to(flair.device)
 
-            assert len(tokens_tensor) == len(subwords)
+            log.info(f'Length of tokens_tensor: "{tokens_tensor.size()}"')
+            log.info(f'Number of subwords in the sentence (w/ bos eos): "{len(subwords)}"')
+
+            #assert len(tokens_tensor) == len(subwords)
 
             hidden_states = model(tokens_tensor)[-1]
-
-            log.info(f'Number of subwords in the sentence (w/ bos eos): "{len(subwords)}"')
 
             for token in sentence.tokens:
                 len_subwords = token_subwords_mapping[token.idx]
