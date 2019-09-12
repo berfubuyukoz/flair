@@ -1119,7 +1119,7 @@ def _get_transformer_sentence_embeddings(
                     subword_start_idx=offset,
                     subword_end_idx=offset + len_subwords,
                     use_scalar_mix=use_scalar_mix,
-                    num_tokens_sentence=len(sentence.tokens)
+                    num_tokens_sentence=len(sentence.tokens),
                     sentence_id=sentence.id,
                     token_no=token_no,
                     token_text=token.text
