@@ -1026,7 +1026,7 @@ def _build_token_subwords_mapping(
     :return: dictionary of token index to corresponding number of subwords
     """
     token_subwords_mapping: Dict[int, int] = {}
-
+    all_subwords = []
     for token in sentence.tokens:
         token_text = token.text
 
@@ -1034,7 +1034,9 @@ def _build_token_subwords_mapping(
 
         token_subwords_mapping[token.idx] = len(subwords)
 
-    return token_subwords_mapping
+        all_subwords.extend(subwords)
+
+    return token_subwords_mapping,all_subwords
 
 
 def _build_token_subwords_mapping_gpt2(
@@ -1102,18 +1104,23 @@ def _get_transformer_sentence_embeddings(
             token_subwords_mapping: Dict[int, int] = {}
 
             if name.startswith("gpt2") or name.startswith("roberta"):
-                token_subwords_mapping = _build_token_subwords_mapping_gpt2(
+                token_subwords_mapping, subwords = _build_token_subwords_mapping_gpt2(
                     sentence=sentence, tokenizer=tokenizer
                 )
             else:
-                token_subwords_mapping = _build_token_subwords_mapping(
+                token_subwords_mapping, subwords = _build_token_subwords_mapping(
                     sentence=sentence, tokenizer=tokenizer
                 )
 
-            subwords = tokenizer.tokenize(sentence.to_tokenized_string())
+            subwords2 = tokenizer.tokenize(sentence.to_tokenized_string())
 
-            log.info(f'Number of subwords in the sentence (w/o bos eos): "{len(subwords)}"')
-            log.info(f'Number of subwords in token_subwords_mapping: "{_get_num_subwords_in_sentence(token_subwords_mapping)}"')
+            x=True
+            if x and (len(subwords)!=len(subwords2)):
+                log.info(f'Number of subwords in the sentence (w/o bos eos): "{len(subwords)},{subwords.sort()}"')
+                log.info(f'Number of subwords2 in the sentence (w/o bos eos): "{len(subwords2)},{subwords2.sort()}"')
+
+                log.info(f'Number of subwords in token_subwords_mapping: "{_get_num_subwords_in_sentence(token_subwords_mapping)}"')
+                x = False
 
             # assert len(subwords) == _get_num_subwords_in_sentence(token_subwords_mapping)
 
@@ -1130,8 +1137,8 @@ def _get_transformer_sentence_embeddings(
             tokens_tensor = torch.tensor([indexed_tokens])
             tokens_tensor = tokens_tensor.to(flair.device)
 
-            log.info(f'Length of tokens_tensor: "{tokens_tensor.size()}"')
-            log.info(f'Number of subwords in the sentence (w/ bos eos): "{len(subwords)}"')
+            #log.info(f'Length of tokens_tensor: "{tokens_tensor.size()}"')
+            #log.info(f'Number of subwords in the sentence (w/ bos eos): "{len(subwords)}"')
 
             #assert len(tokens_tensor) == len(subwords)
 
