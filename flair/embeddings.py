@@ -946,7 +946,8 @@ def _extract_embeddings(
     subword_start_idx: int,
     subword_end_idx: int,
     use_scalar_mix: bool = False,
-    token:Token = None
+    token:Token = None,
+    sent_idx: int = -1
 ) -> List[torch.FloatTensor]:
     """
     Extracts subword embeddings from specified layers from hidden states.
@@ -965,7 +966,17 @@ def _extract_embeddings(
 
         try:
             first_embedding: torch.FloatTensor = current_embeddings[0]
-            log.info(f'First embedding len: "{len(first_embedding)}"')
+            # log.info(f'First embedding len: "{len(first_embedding)}"')
+            if sent_idx==0 and token.idx==1:
+                log.info(f'Tokens subword embeddings are successfully retrieved.')
+                log.info(f'Length of first hidden state of the layer: "{len(hidden_states[layer][0])}"')
+                log.info(f'current_embeddings list len: "{len(current_embeddings)}"')
+                log.info(f'sentence id: "{token.sentence.id}"')
+                log.info(f'num tokens of sentence: "{len(token.sentence.tokens)}"')
+                log.info(f'token idx inside sentence (starts from 1): "{token.idx}"')
+                log.info(f'token text: "{token.text}"')
+                log.info(f'subword start idx: "{subword_start_idx}"')
+                log.info(f'subword end idx: "{subword_end_idx}"')
         except:
             log.info(f'Length of first hidden state of the layer: "{len(hidden_states[layer][0])}"')
             log.info(f'current_embeddings list len: "{len(current_embeddings)}"')
@@ -1086,7 +1097,7 @@ def _get_transformer_sentence_embeddings(
     :return: list of sentences (each token of a sentence is now embedded)
     """
     with torch.no_grad():
-        for sentence in sentences:
+        for sent_idx,sentence in enumerate(sentences):
             
             token_subwords_mapping: Dict[int, int] = {}
 
@@ -1136,7 +1147,8 @@ def _get_transformer_sentence_embeddings(
                     subword_start_idx=offset,
                     subword_end_idx=offset + len_subwords,
                     use_scalar_mix=use_scalar_mix,
-                    token = token
+                    token = token,
+                    sent_idx=sent_idx
                 )
 
 
