@@ -1101,7 +1101,10 @@ def _get_transformer_sentence_embeddings(
 
             subwords = tokenizer.tokenize(sentence.to_tokenized_string())
 
-            assert len(subwords) == _get_num_subwords_in_sentence(token_subwords_mapping)
+            log.info(f'Number of subwords in the sentence (w/o bos eos): "{len(subwords)}"')
+            log.info(f'Number of subwords in token_subwords_mapping: "{_get_num_subwords_in_sentence(token_subwords_mapping)}"')
+
+            # assert len(subwords) == _get_num_subwords_in_sentence(token_subwords_mapping)
 
             offset = 0
 
