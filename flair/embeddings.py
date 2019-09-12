@@ -1099,6 +1099,7 @@ def _get_transformer_sentence_embeddings(
     :return: list of sentences (each token of a sentence is now embedded)
     """
     with torch.no_grad():
+        x=True
         for sent_idx,sentence in enumerate(sentences):
             
             token_subwords_mapping: Dict[int, int] = {}
@@ -1114,10 +1115,11 @@ def _get_transformer_sentence_embeddings(
 
             subwords2 = tokenizer.tokenize(sentence.to_tokenized_string())
 
-            x=True
             if x and (len(subwords)!=len(subwords2)):
-                log.info(f'Number of subwords in the sentence (w/o bos eos): "{len(subwords)},{subwords.sort()}"')
-                log.info(f'Number of subwords2 in the sentence (w/o bos eos): "{len(subwords2)},{subwords2.sort()}"')
+                subwords_str = "|".join(subwords.sort())
+                subwords2_str = "|".join(subwords2.sort())
+                log.info(f'Number of subwords in the sentence (w/o bos eos): "{len(subwords)},{subwords_str}"')
+                log.info(f'Number of subwords2 in the sentence (w/o bos eos): "{len(subwords2)},{subwords2_str}"')
 
                 log.info(f'Number of subwords in token_subwords_mapping: "{_get_num_subwords_in_sentence(token_subwords_mapping)}"')
                 x = False
