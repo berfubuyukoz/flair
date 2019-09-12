@@ -1116,8 +1116,10 @@ def _get_transformer_sentence_embeddings(
             subwords2 = tokenizer.tokenize(sentence.to_tokenized_string())
 
             if x and (len(subwords)!=len(subwords2)):
-                subwords_str = "|".join(subwords.sort())
-                subwords2_str = "|".join(subwords2.sort())
+                subwords.sort()
+                subwords2.sort()
+                subwords_str = "|".join(subwords)
+                subwords2_str = "|".join(subwords2)
                 log.info(f'Number of subwords in the sentence (w/o bos eos): "{len(subwords)},{subwords_str}"')
                 log.info(f'Number of subwords2 in the sentence (w/o bos eos): "{len(subwords2)},{subwords2_str}"')
 
