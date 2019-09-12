@@ -956,7 +956,7 @@ def _extract_embeddings(
     :param subword_start_idx: defines start index for subword
     :param subword_end_idx: defines end index for subword
     :param use_scalar_mix: determines, if scalar mix should be used
-    :return: list of extracted subword embeddings
+    :return: list of extracted subword embeddings for the token.
     """
     subtoken_embeddings: List[torch.FloatTensor] = []
 
@@ -965,8 +965,9 @@ def _extract_embeddings(
 
         try:
             first_embedding: torch.FloatTensor = current_embeddings[0]
+            log.info(f'First embedding len: "{len(first_embedding)}"')
         except:
-            log.info(f'hidden state layer first index len: "{len(hidden_states[layer][0])}"')
+            log.info(f'Length of first hidden state of the layer: "{len(hidden_states[layer][0])}"')
             log.info(f'current_embeddings list len: "{len(current_embeddings)}"')
             log.info(f'sentence id: "{token.sentence.id}"')
             log.info(f'num tokens of sentence: "{len(token.sentence.tokens)}"')
@@ -1051,6 +1052,14 @@ def _build_token_subwords_mapping_gpt2(
 
     return token_subwords_mapping
 
+def _get_num_subwords_in_sentence(my_dict):
+    count = 0
+
+    for k in my_dict:
+        count += my_dict[k]
+
+    return count
+
 
 def _get_transformer_sentence_embeddings(
     sentences: List[Sentence],
@@ -1092,6 +1101,8 @@ def _get_transformer_sentence_embeddings(
 
             subwords = tokenizer.tokenize(sentence.to_tokenized_string())
 
+            assert len(subwords) == len(_get_num_subwords_in_sentence(token_subwords_mapping))
+
             offset = 0
 
             if bos_token:
@@ -1105,7 +1116,11 @@ def _get_transformer_sentence_embeddings(
             tokens_tensor = torch.tensor([indexed_tokens])
             tokens_tensor = tokens_tensor.to(flair.device)
 
+            assert len(tokens_tensor) == len(subwords)
+
             hidden_states = model(tokens_tensor)[-1]
+
+            log.info(f'Number of subwords in the sentence (w/ bos eos): "{len(subwords)}"')
 
             for token in sentence.tokens:
                 len_subwords = token_subwords_mapping[token.idx]
