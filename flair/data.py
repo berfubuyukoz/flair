@@ -418,11 +418,11 @@ class Sentence(DataPoint):
                         word = ""
                     else:
                         word += char
-                # increment for last token in sentence if not followed by whtespace
-                index += 1
+                # increment for last token in sentence if not followed by whitespace
                 if len(word) > 0:
+                    index += 1
                     token = Token(word, start_position=index - len(word))
-                    self.add_token(token)
+                    self.add_token(token) #token idx is set.
 
         # log a warning if the dataset is empty
         if text == "":

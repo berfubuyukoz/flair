@@ -946,10 +946,7 @@ def _extract_embeddings(
     subword_start_idx: int,
     subword_end_idx: int,
     use_scalar_mix: bool = False,
-    token_no: int = -1,
-    num_tokens_sentence: int = 0,
-    sentence_id: str = None,
-    token_text: str = None
+    token:Token = None
 ) -> List[torch.FloatTensor]:
     """
     Extracts subword embeddings from specified layers from hidden states.
@@ -971,10 +968,10 @@ def _extract_embeddings(
         except:
             log.info(f'hidden state layer first index len: "{len(hidden_states[layer][0])}"')
             log.info(f'current_embeddings list len: "{len(current_embeddings)}"')
-            log.info(f'sentence id: "{sentence_id}"')
-            log.info(f'num tokens of sentence: "{num_tokens_sentence}"')
-            log.info(f'token no inside sentence: "{token_no}"')
-            log.info(f'token text: "{token_text}"')
+            log.info(f'sentence id: "{token.sentence.id}"')
+            log.info(f'num tokens of sentence: "{len(token.sentence.tokens)}"')
+            log.info(f'token idx inside sentence (starts from 1): "{token.idx}"')
+            log.info(f'token text: "{token.text}"')
             log.info(f'subword start idx: "{subword_start_idx}"')
             log.info(f'subword end idx: "{subword_end_idx}"')
 
@@ -1081,6 +1078,7 @@ def _get_transformer_sentence_embeddings(
     """
     with torch.no_grad():
         for sentence in sentences:
+            
             token_subwords_mapping: Dict[int, int] = {}
 
             if name.startswith("gpt2") or name.startswith("roberta"):
@@ -1109,7 +1107,7 @@ def _get_transformer_sentence_embeddings(
 
             hidden_states = model(tokens_tensor)[-1]
 
-            for token_no, token in enumerate(sentence.tokens):
+            for token in sentence.tokens:
                 len_subwords = token_subwords_mapping[token.idx]
 
                 subtoken_embeddings = _extract_embeddings(
@@ -1120,9 +1118,7 @@ def _get_transformer_sentence_embeddings(
                     subword_end_idx=offset + len_subwords,
                     use_scalar_mix=use_scalar_mix,
                     num_tokens_sentence=len(sentence.tokens),
-                    sentence_id=sentence.id,
-                    token_no=token_no,
-                    token_text=token.text
+                    token = token
                 )
 
 

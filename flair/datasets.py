@@ -909,6 +909,8 @@ class ClassificationDataset(FlairDataset):
     def _parse_line_to_sentence(
         self, line: str, label_prefix: str, id_prefix: str, use_tokenizer: bool = True
     ):
+
+    # Assumes a line consisting of label, id, text, respectively, and with a single space between each.
         words = line.split()
 
         labels = []
