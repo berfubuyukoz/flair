@@ -39,9 +39,9 @@ from flair.data import Corpus
 from .nn import LockedDropout, WordDropout
 from .data import Dictionary, Token, Sentence
 from .file_utils import cached_path, open_inside_zip
+from flair.training_utils import log_line
 
 log = logging.getLogger("flair")
-
 
 class Embeddings(torch.nn.Module):
     """Abstract base class for all embeddings. Every new type of embedding must implement these methods."""
