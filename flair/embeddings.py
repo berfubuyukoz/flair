@@ -1157,7 +1157,7 @@ def _get_transformer_sentence_embeddings(
                 log.info(f'Subwords from sentence (w/o bos eos): "{len(subwords_from_sentence)},{subwords_from_sentence_str}"')
                 log.info(f'Two values below are expected to be equal:')
                 log.info(f'Subwords in the sentence (w/ bos eos) - subwords_from_sentence array is used for it: "{len(subwords)}"')
-                log.info(f'Length of first hidden state of the layer, len(hidden_states[layer][0]) : "{len(hidden_states[layer][0])}"') # must be equal to len(subwords)
+                log.info(f'Length of first hidden state of the layer, len(hidden_states[layer][0]) : "{len(hidden_states[layers[0]][0])}"') # must be equal to len(subwords)
                 x-=1
                 log_line(log)
 
