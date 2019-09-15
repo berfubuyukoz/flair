@@ -1175,7 +1175,7 @@ def _get_transformer_sentence_embeddings(
                     num_subwords_of_sentence=len(subwords)
                 )
 
-                offset += len_subwords
+                offset += num_subwords
 
                 final_subtoken_embedding = torch.cat(subtoken_embeddings)
                 token.set_embedding(name, final_subtoken_embedding)
