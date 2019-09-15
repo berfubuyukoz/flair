@@ -967,33 +967,33 @@ def _extract_embeddings(
         try:
             first_embedding: torch.FloatTensor = current_embeddings[0]
             # log.info(f'First embedding len: "{len(first_embedding)}"')
-            global three_success_encountered
-            if three_success_encountered>0:
-                log.info(f'This is a time when subword embeddings of a token is not empty.')
-                log.info(f'sentence id: "{token.sentence.id}"')
+            # global three_success_encountered
+            # if three_success_encountered>0:
+            log.info(f'This is the time when subword embeddings of a token is not empty.')
+            log.info(f'sentence id: "{token.sentence.id}"')
 
-                log.info(f'Two values below are expected to be equal:')
-                log.info(f'Number of subwords in the sentence (w/ bos eos) - subwords array is used for it: "{num_subwords_of_sentence}"')
-                log.info(f'Length of first hidden state of the layer, aka len(hidden_states[layer][0]) : "{len(hidden_states[layer][0])}"') # must be equal to len(subwords)
-              
-                log.info(f'current_embeddings list len: "{len(current_embeddings)}"')
-                
-                log.info(f'num tokens of sentence: "{len(token.sentence.tokens)}"')
-                log.info(f'token idx inside sentence (starts from 1): "{token.idx}"')
-                log.info(f'token text: "{token.text}"')
-                log.info(f'subword start idx: "{subword_start_idx}"')
-                log.info(f'subword end idx: "{subword_end_idx}"')
-                log_line(log)
-                three_success_encountered-=1
+            log.info(f'Two values below are expected to be equal:')
+            log.info(f'Subwords in the sentence (w/ bos eos) - subwords_from_sentence array is used for it: "{num_subwords_of_sentence}"')
+            log.info(f'Length of first hidden state of the layer, len(hidden_states[layer][0]) : "{len(hidden_states[layer][0])}"') # must be equal to len(subwords)
+               
+            log.info(f'current_embeddings list len: "{len(current_embeddings)}"')
+            
+            log.info(f'num tokens of sentence: "{len(token.sentence.tokens)}"')
+            log.info(f'token idx inside sentence (starts from 1): "{token.idx}"')
+            log.info(f'token text: "{token.text}"')
+            log.info(f'subword start idx: "{subword_start_idx}"')
+            log.info(f'subword end idx: "{subword_end_idx}"')
+            log_line(log)
+            # three_success_encountered-=1
 
         except:
             log.info(f'Subword embeddings of a token is empty!: "{len(current_embeddings)}"')
             log.info(f'sentence id: "{token.sentence.id}"')
 
             log.info(f'Two values below are expected to be equal:')
-            log.info(f'Number of subwords in the sentence (w/ bos eos) - subwords array is used for it: "{num_subwords_of_sentence}"')
-            log.info(f'Length of first hidden state of the layer, aka len(hidden_states[layer][0]) : "{len(hidden_states[layer][0])}"') # must be equal to len(subwords)
-
+            log.info(f'Subwords in the sentence (w/ bos eos) - subwords_from_sentence array is used for it: "{num_subwords_of_sentence}"')
+            log.info(f'Length of first hidden state of the layer, len(hidden_states[layer][0]) : "{len(hidden_states[layer][0])}"') # must be equal to len(subwords)
+               
             log.info(f'num tokens of sentence: "{len(token.sentence.tokens)}"')
             log.info(f'token idx inside sentence (starts from 1): "{token.idx}"')
             log.info(f'token text: "{token.text}"')
@@ -1089,7 +1089,7 @@ def _get_num_subwords_in_sentence(my_dict):
     return count
 
 
-three_success_encountered = 3
+# three_success_encountered = 3
 def _get_transformer_sentence_embeddings(
     sentences: List[Sentence],
     tokenizer: PreTrainedTokenizer,
@@ -1121,16 +1121,16 @@ def _get_transformer_sentence_embeddings(
             token_subwords_mapping: Dict[int, int] = {}
 
             if name.startswith("gpt2") or name.startswith("roberta"):
-                token_subwords_mapping, subwords = _build_token_subwords_mapping_gpt2(
+                token_subwords_mapping, subwords_from_tokens = _build_token_subwords_mapping_gpt2(
                     sentence=sentence, tokenizer=tokenizer
                 )
             else:
-                token_subwords_mapping, subwords = _build_token_subwords_mapping(
+                token_subwords_mapping, subwords_from_tokens = _build_token_subwords_mapping(
                     sentence=sentence, tokenizer=tokenizer
                 )
 
-            subwords_copy = subwords.copy()
-            subwords2 = tokenizer.tokenize(sentence.to_tokenized_string())
+            subwords_from_sentence = tokenizer.tokenize(sentence.to_tokenized_string())
+            subwords = subwords_from_sentence
 
             offset = 0
 
@@ -1147,24 +1147,24 @@ def _get_transformer_sentence_embeddings(
 
             hidden_states = model(tokens_tensor)[-1]
 
-            if x>0 and (len(subwords_copy)!=len(subwords2)):
+            if x>0 and (len(subwords_from_sentence)!=len(subwords_from_tokens)):
                 log.info(f'Sentence with incompatible lengths of 2 alternative subwords lists is detected: "{sentence.id}"')
-                subwords_copy.sort()
-                subwords2.sort()
-                subwords_copy_str = "|".join(subwords_copy)
-                subwords2_str = "|".join(subwords2)
-                log.info(f'Number of subwords in the sentence (w/o bos eos): "{len(subwords_copy)},{subwords_copy_str}"')
-                log.info(f'Number of subwords2 in the sentence (w/o bos eos): "{len(subwords2)},{subwords2_str}"')
+                subwords_from_tokens.sort()
+                subwords_from_sentence.sort()
+                subwords_from_tokens_str = "|".join(subwords_from_tokens)
+                subwords_from_sentence_str = "|".join(subwords_from_sentence)
+                log.info(f'Subwords from tokens: (w/o bos eos): "{len(subwords_from_tokens)},{subwords_from_tokens_str}"')
+                log.info(f'Subwords from sentence (w/o bos eos): "{len(subwords_from_sentence)},{subwords_from_sentence_str}"')
                 log.info(f'Two values below are expected to be equal:')
-                log.info(f'Number of subwords in the sentence (w/ bos eos) - subwords array is used for it: "{len(subwords)}"')
-                log.info(f'Length of first hidden state of the layer, aka len(hidden_states[layer][0]) : "{len(hidden_states[layer][0])}"') # must be equal to len(subwords)
+                log.info(f'Subwords in the sentence (w/ bos eos) - subwords_from_sentence array is used for it: "{len(subwords)}"')
+                log.info(f'Length of first hidden state of the layer, len(hidden_states[layer][0]) : "{len(hidden_states[layer][0])}"') # must be equal to len(subwords)
                 x-=1
                 log_line(log)
 
             for token in sentence.tokens:
                 num_subwords = token_subwords_mapping[token.idx]
 
-                subtoken_embeddings, first_success_encountered = _extract_embeddings(
+                subtoken_embeddings = _extract_embeddings(
                     hidden_states=hidden_states,
                     layers=layers,
                     pooling_operation=pooling_operation,
@@ -1174,7 +1174,6 @@ def _get_transformer_sentence_embeddings(
                     token = token,
                     num_subwords_of_sentence=len(subwords)
                 )
-
 
                 offset += len_subwords
 
