@@ -220,6 +220,7 @@ class ModelTrainer:
             sampler = sampler(train_data)
             shuffle = False
 
+        train_score_history = []
         dev_score_history = []
         dev_loss_history = []
         train_loss_history = []
@@ -334,6 +335,7 @@ class ModelTrainer:
                         embeddings_storage_mode=embeddings_storage_mode,
                     )
                     result_line += f"\t{train_eval_result.log_line}"
+                    train_score_history.append(train_eval_result.main_score)
 
                     # depending on memory mode, embeddings are moved to CPU, GPU or deleted
                     store_embeddings(self.corpus.train, embeddings_storage_mode)
@@ -491,6 +493,7 @@ class ModelTrainer:
 
         return {
             "test_score": final_score,
+            "train_score_history:" train_score_history,
             "dev_score_history": dev_score_history,
             "train_loss_history": train_loss_history,
             "dev_loss_history": dev_loss_history,
