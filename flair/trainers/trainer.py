@@ -341,12 +341,13 @@ class ModelTrainer:
                     store_embeddings(self.corpus.train, embeddings_storage_mode)
 
                 if log_dev:
-                    dev_eval_result, dev_loss = self.model.evaluate(
+                    dev_eval_result, dev_loss, _ = self.model.evaluate_n_predict(
                         DataLoader(
                             self.corpus.dev,
                             batch_size=eval_mini_batch_size,
                             num_workers=num_workers,
                         ),
+                        base_path / "dev_predictions.tsv",
                         embeddings_storage_mode=embeddings_storage_mode,
                     )
                     result_line += f"\t{dev_loss}\t{dev_eval_result.log_line}"
@@ -370,13 +371,13 @@ class ModelTrainer:
                         )
 
                 if log_test:
-                    test_eval_result, test_loss = self.model.evaluate(
+                    test_eval_result, test_loss, _ = self.model.evaluate_n_predict(
                         DataLoader(
                             self.corpus.test,
                             batch_size=eval_mini_batch_size,
                             num_workers=num_workers,
                         ),
-                        base_path / "test.tsv",
+                        base_path / "test_predictions.tsv",
                         embeddings_storage_mode=embeddings_storage_mode,
                     )
                     result_line += f"\t{test_loss}\t{test_eval_result.log_line}"

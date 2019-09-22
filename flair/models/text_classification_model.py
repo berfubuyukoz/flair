@@ -20,7 +20,7 @@ from flair.training_utils import (
 )
 
 log = logging.getLogger("flair")
-
+from sklearn.metrics import matthews_corrcoef
 
 class TextClassifier(flair.nn.Model):
     """
@@ -165,6 +165,127 @@ class TextClassifier(flair.nn.Model):
 
             return sentences
 
+     def evaluate_n_predict(
+        self,
+        data_loader: DataLoader,
+        out_path: Path = None,
+        embeddings_storage_mode: str = "cpu",
+    ) -> (Result, float, DataFrame):
+
+        with torch.no_grad():
+            eval_loss = 0
+
+            metric = Metric("Evaluation")
+
+            lines: List[str] = []
+            batch_count: int = 0
+            sentence_ids = []
+            sentence_strs = []
+            true_values = []
+            predictions = []
+            confidences = []
+
+            for batch in data_loader:
+
+                batch_count += 1
+
+                labels, loss = self.forward_labels_and_loss(batch)
+
+                eval_loss += loss
+
+                sentence_ids_for_batch = [sent.id for sent in batch]
+                sentences_for_batch = [sent.to_plain_string() for sent in batch]
+                confidences_for_batch = [
+                    [label.score for label in sent_labels] for sent_labels in labels
+                ]
+                predictions_for_batch = [
+                    [label.value for label in sent_labels] for sent_labels in labels
+                ]
+                true_values_for_batch = [
+                    sentence.get_label_names() for sentence in batch
+                ]
+                available_labels = self.label_dictionary.get_items()
+
+                sentence_ids.extend(sentence_ids_for_batch)
+                sentence_strs.extend(sentences_for_batch)
+                true_values.extend(true_values_for_batch)
+                predictions.extend(predictions_for_batch)
+                confidences.extend(confidences_for_batch)
+
+                for sentence_id, sentence_str confidence, prediction, true_value in zip(
+                    sentence_ids_for_batch,
+                    sentences_for_batch,
+                    confidences_for_batch,
+                    predictions_for_batch,
+                    true_values_for_batch,
+                ):
+                    eval_line = "{}\t{}\t{}\t{}\t{}\n".format(
+                        sentence_id, sentence_str, true_value, prediction, confidence
+                    )
+                    lines.append(eval_line)
+
+
+                for predictions_for_sentence, true_values_for_sentence in zip(
+                    predictions_for_batch, true_values_for_batch
+                ):
+
+                    for label in available_labels:
+                        if (
+                            label in predictions_for_sentence
+                            and label in true_values_for_sentence
+                        ):
+                            metric.add_tp(label)
+                        elif (
+                            label in predictions_for_sentence
+                            and label not in true_values_for_sentence
+                        ):
+                            metric.add_fp(label)
+                        elif (
+                            label not in predictions_for_sentence
+                            and label in true_values_for_sentence
+                        ):
+                            metric.add_fn(label)
+                        elif (
+                            label not in predictions_for_sentence
+                            and label not in true_values_for_sentence
+                        ):
+                            metric.add_tn(label)
+
+                store_embeddings(batch, embeddings_storage_mode)
+
+            eval_loss /= batch_count
+
+            predictions_zip = list(zip(sentence_ids, sentence_strs, true_values, predictions, confidences)) 
+            predictions_tbl = pd.DataFrame(predictions_zip, columns = ['sentence_id', 'sentence_str', 'true_value', 'prediction', 'confidence'])
+
+            detailed_result = (
+                f"\nMICRO_AVG: acc {metric.micro_avg_accuracy()} - f1-score {metric.micro_avg_f_score()}"
+                f"\nMACRO_AVG: acc {metric.macro_avg_accuracy()} - f1-score {metric.macro_avg_f_score()}"
+            )
+            for class_name in metric.get_classes():
+                detailed_result += (
+                    f"\n{class_name:<10} tp: {metric.get_tp(class_name)} - fp: {metric.get_fp(class_name)} - "
+                    f"fn: {metric.get_fn(class_name)} - tn: {metric.get_tn(class_name)} - precision: "
+                    f"{metric.precision(class_name):.4f} - recall: {metric.recall(class_name):.4f} - "
+                    f"accuracy: {metric.accuracy(class_name):.4f} - f1-score: "
+                    f"{metric.f_score(class_name):.4f}"
+                )
+
+            mcc = matthews_corrcoef(true_values,predictions)
+
+            result = Result(
+                main_score=metric.macro_avg_f_score(),
+                log_line=f"{metric.precision()}\t{metric.recall()}\t{metric.micro_avg_f_score()}\t{metric.micro_avg_accuracy()}\t{metric.macro_avg_precision()}\t{metric.macro_avg_recall()}\t{metric.macro_avg_f_score()}\t{metric.macro_avg_accuracy()}\t{mcc}",
+                log_header="PRECISION-MICRO\tRECALL-MICRO\tF1-MICRO\tACC-MICRO\tPRECISION-MACRO\tRECALL-MACRO\tF1_MACRO\tACC-MACRO\tMCC",
+                detailed_results=detailed_result,
+            )
+
+            if out_path is not None:
+                with open(out_path, "w", encoding="utf-8") as outfile:
+                    outfile.write("".join(lines))
+
+            return result, eval_loss, predictions_tbl
+
     def evaluate(
         self,
         data_loader: DataLoader,
@@ -179,6 +300,7 @@ class TextClassifier(flair.nn.Model):
 
             lines: List[str] = []
             batch_count: int = 0
+
             for batch in data_loader:
 
                 batch_count += 1
@@ -187,6 +309,7 @@ class TextClassifier(flair.nn.Model):
 
                 eval_loss += loss
 
+                sentence_ids_for_batch = [sent.id for sent in batch]
                 sentences_for_batch = [sent.to_plain_string() for sent in batch]
                 confidences_for_batch = [
                     [label.score for label in sent_labels] for sent_labels in labels
@@ -198,17 +321,18 @@ class TextClassifier(flair.nn.Model):
                     sentence.get_label_names() for sentence in batch
                 ]
                 available_labels = self.label_dictionary.get_items()
-
-                for sentence, confidence, prediction, true_value in zip(
+                for sentence_id, sentence_str confidence, prediction, true_value in zip(
+                    sentence_ids_for_batch,
                     sentences_for_batch,
                     confidences_for_batch,
                     predictions_for_batch,
                     true_values_for_batch,
                 ):
-                    eval_line = "{}\t{}\t{}\t{}\n".format(
-                        sentence, true_value, prediction, confidence
+                    eval_line = "{}\t{}\t{}\t{}\t{}\n".format(
+                        sentence_id, sentence_str, true_value, prediction, confidence
                     )
                     lines.append(eval_line)
+
 
                 for predictions_for_sentence, true_values_for_sentence in zip(
                     predictions_for_batch, true_values_for_batch
@@ -253,10 +377,12 @@ class TextClassifier(flair.nn.Model):
                     f"{metric.f_score(class_name):.4f}"
                 )
 
+            mcc = matthews_corrcoef(true_values,predictions)
+
             result = Result(
                 main_score=metric.macro_avg_f_score(),
-                log_line=f"{metric.precision()}\t{metric.recall()}\t{metric.macro_avg_f_score()}",
-                log_header="PRECISION\tRECALL\tF1",
+                log_line=f"{metric.precision()}\t{metric.recall()}\t{metric.micro_avg_f_score()}\t{metric.micro_avg_accuracy()}\t{metric.macro_avg_precision()}\t{metric.macro_avg_recall()}\t{metric.macro_avg_f_score()}\t{metric.macro_avg_accuracy()}\t{mcc}",
+                log_header="PRECISION-MICRO\tRECALL-MICRO\tF1-MICRO\tACC-MICRO\tPRECISION-MACRO\tRECALL-MACRO\tF1_MACRO\tACC-MACRO\tMCC",
                 detailed_results=detailed_result,
             )
 

@@ -72,6 +72,13 @@ class Metric(object):
             )
         return 0.0
 
+    def macro_avg_precision():
+        class_precisions = [self.precision(class_name) for class_name in self.get_classes()]
+        if len(class_precisions) == 0:
+            return 0.0
+        macro_precision = sum(class_precisions) / len(class_precisions)
+        return macro_precision
+
     def recall(self, class_name=None):
         if self.get_tp(class_name) + self.get_fn(class_name) > 0:
             return round(
@@ -80,6 +87,13 @@ class Metric(object):
                 4,
             )
         return 0.0
+
+    def macro_avg_recall():
+        class_recalls = [self.recall(class_name) for class_name in self.get_classes()]
+        if len(class_recalls) == 0:
+            return 0.0
+        macro_recall = sum(class_recalls) / len(class_recalls)
+        return macro_recall
 
     def f_score(self, class_name=None):
         if self.precision(class_name) + self.recall(class_name) > 0:
