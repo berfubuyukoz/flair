@@ -451,13 +451,14 @@ class ModelTrainer:
                     )
                     f.write(result_line)
 
+                epoch_nu = epoch+1
                 # if checkpoint is enable, save model at each epoch
                 if checkpoint and not param_selection_mode:
                     self.model.save_checkpoint(
-                        base_path / "checkpoint.pt",
+                        base_path / "checkpoint_"+str(epoch_nu)+".pt",
                         optimizer.state_dict(),
                         scheduler.state_dict(),
-                        epoch + 1,
+                        epoch_nu,
                         train_loss,
                     )
 
