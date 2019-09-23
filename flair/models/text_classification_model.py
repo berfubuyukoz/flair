@@ -17,6 +17,7 @@ from flair.training_utils import (
     Metric,
     Result,
     store_embeddings,
+    init_output_file
 )
 
 log = logging.getLogger("flair")
