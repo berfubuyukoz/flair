@@ -212,7 +212,7 @@ class TextClassifier(flair.nn.Model):
                 predictions.extend(predictions_for_batch)
                 confidences.extend(confidences_for_batch)
 
-                for sentence_id, sentence_str confidence, prediction, true_value in zip(
+                for sentence_id, sentence_str, confidence, prediction, true_value in zip(
                     sentence_ids_for_batch,
                     sentences_for_batch,
                     confidences_for_batch,
@@ -321,7 +321,7 @@ class TextClassifier(flair.nn.Model):
                     sentence.get_label_names() for sentence in batch
                 ]
                 available_labels = self.label_dictionary.get_items()
-                for sentence_id, sentence_str confidence, prediction, true_value in zip(
+                for sentence_id, sentence_str, confidence, prediction, true_value in zip(
                     sentence_ids_for_batch,
                     sentences_for_batch,
                     confidences_for_batch,
