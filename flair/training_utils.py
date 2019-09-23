@@ -72,7 +72,7 @@ class Metric(object):
             )
         return 0.0
 
-    def macro_avg_precision():
+    def macro_avg_precision(self, class_name=None):
         class_precisions = [self.precision(class_name) for class_name in self.get_classes()]
         if len(class_precisions) == 0:
             return 0.0
@@ -88,7 +88,7 @@ class Metric(object):
             )
         return 0.0
 
-    def macro_avg_recall():
+    def macro_avg_recall(self, class_name=None):
         class_recalls = [self.recall(class_name) for class_name in self.get_classes()]
         if len(class_recalls) == 0:
             return 0.0
