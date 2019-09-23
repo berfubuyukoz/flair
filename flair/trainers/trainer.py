@@ -326,7 +326,7 @@ class ModelTrainer:
                 result_line: str = ""
 
                 if log_train:
-                    train_eval_result, train_loss = self.model.evaluate(
+                    train_eval_result, train_loss = self.model.evaluate_n_predict(
                         DataLoader(
                             self.corpus.train,
                             batch_size=eval_mini_batch_size,
@@ -349,6 +349,7 @@ class ModelTrainer:
                         ),
                         base_path / "dev_predictions.tsv",
                         embeddings_storage_mode=embeddings_storage_mode,
+                        return_predictions=True
                     )
                     result_line += f"\t{dev_loss}\t{dev_eval_result.log_line}"
                     log.info(
@@ -379,6 +380,7 @@ class ModelTrainer:
                         ),
                         base_path / "test_predictions.tsv",
                         embeddings_storage_mode=embeddings_storage_mode,
+                        return_predictions=True
                     )
                     result_line += f"\t{test_loss}\t{test_eval_result.log_line}"
                     log.info(
