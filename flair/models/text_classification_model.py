@@ -165,7 +165,7 @@ class TextClassifier(flair.nn.Model):
 
             return sentences
 
-     def evaluate_n_predict(
+    def evaluate_n_predict(
         self,
         data_loader: DataLoader,
         out_path: Path = None,
