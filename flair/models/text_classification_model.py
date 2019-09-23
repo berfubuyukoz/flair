@@ -210,7 +210,7 @@ class TextClassifier(flair.nn.Model):
                 available_labels = self.label_dictionary.get_items()
 
                 for sentence_id, sentence_str, true_values_for_sentence, predictions_for_sentence, confidences_for_sentence in zip(
-                    sentence_ids_for_batch, true_values_for_batch, predictions_for_batch, confidences_for_batch
+                    sentence_ids_for_batch, sentences_for_batch, true_values_for_batch, predictions_for_batch, confidences_for_batch
                 ):
 
                     for label in available_labels:
