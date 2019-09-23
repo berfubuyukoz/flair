@@ -235,18 +235,18 @@ class TextClassifier(flair.nn.Model):
                         ):
                             metric.add_tn(label)
 
-                        true_value = true_values_for_sentence[0]
-                        prediction = predictions_for_sentence[0]
-                        confidence = confidences_for_sentence[0]
+                    true_value = true_values_for_sentence[0]
+                    prediction = predictions_for_sentence[0]
+                    confidence = confidences_for_sentence[0]
 
-                        sentence_ids.append(sentence_id)
-                        sentence_strs.append(sentence_str)
-                        true_values.append(true_value)
-                        predictions.append(prediction)
-                        confidences.append(confidence)
+                    sentence_ids.append(sentence_id)
+                    sentence_strs.append(sentence_str)
+                    true_values.append(true_value)
+                    predictions.append(prediction)
+                    confidences.append(confidence)
 
-                        eval_line = "{}\t{}\t{}\t{}\t{}\n".format(sentence_id, sentence_str, true_value, prediction, confidence)
-                        lines.append(eval_line)
+                    eval_line = "{}\t{}\t{}\t{}\t{}\n".format(sentence_id, sentence_str, true_value, prediction, confidence)
+                    lines.append(eval_line)
 
 
                 store_embeddings(batch, embeddings_storage_mode)

@@ -418,30 +418,31 @@ class ModelTrainer:
                 with open(loss_txt, "a") as f:
 
                     # make headers on first epoch
-                    if epoch == 0:
+                    # make headers for the epoch if it is the only epoch of training resumed from a checkpoint.
+                    if (epoch == 0) or (checkpointed_from is not None and max_epochs == 1):
                         f.write(
                             f"EPOCH\tTIMESTAMP\tBAD_EPOCHS\tLEARNING_RATE\tTRAIN_LOSS"
                         )
 
-                        if log_train:
-                            f.write(
-                                "\tTRAIN_"
-                                + "\tTRAIN_".join(
-                                    train_eval_result.log_header.split("\t")
-                                )
+                    if log_train:
+                        f.write(
+                            "\tTRAIN_"
+                            + "\tTRAIN_".join(
+                                train_eval_result.log_header.split("\t")
                             )
-                        if log_dev:
-                            f.write(
-                                "\tDEV_LOSS\tDEV_"
-                                + "\tDEV_".join(dev_eval_result.log_header.split("\t"))
+                        )
+                    if log_dev:
+                        f.write(
+                            "\tDEV_LOSS\tDEV_"
+                            + "\tDEV_".join(dev_eval_result.log_header.split("\t"))
+                        )
+                    if log_test:
+                        f.write(
+                            "\tTEST_LOSS\tTEST_"
+                            + "\tTEST_".join(
+                                test_eval_result.log_header.split("\t")
                             )
-                        if log_test:
-                            f.write(
-                                "\tTEST_LOSS\tTEST_"
-                                + "\tTEST_".join(
-                                    test_eval_result.log_header.split("\t")
-                                )
-                            )
+                        )
 
                     f.write(
                         f"\n{epoch}\t{datetime.datetime.now():%H:%M:%S}\t{bad_epochs}\t{learning_rate:.4f}\t{train_loss}"
