@@ -255,9 +255,9 @@ class TextClassifier(flair.nn.Model):
 
             if return_predictions:
                 predictions_zip = list(zip(sentence_ids, sentence_strs, true_values, predictions, confidences)) 
-                predictions_tbl = pd.DataFrame(predictions_zip, columns = ['sentence_id', 'sentence_str', 'true_value', 'prediction', 'confidence'])
+                predictions_tbl = DataFrame(predictions_zip, columns = ['sentence_id', 'sentence_str', 'true_value', 'prediction', 'confidence'])
             else:
-                predictions_tbl = pd.DataFrame()
+                predictions_tbl = DataFrame()
 
             detailed_result = (
                 f"\nMICRO_AVG: acc {metric.micro_avg_accuracy()} - f1-score {metric.micro_avg_f_score()}"
