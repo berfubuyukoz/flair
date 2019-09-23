@@ -21,6 +21,7 @@ from flair.training_utils import (
 
 log = logging.getLogger("flair")
 from sklearn.metrics import matthews_corrcoef
+from pandas import DataFrame
 
 class TextClassifier(flair.nn.Model):
     """
