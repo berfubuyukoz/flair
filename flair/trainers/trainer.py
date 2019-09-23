@@ -347,7 +347,8 @@ class ModelTrainer:
                             batch_size=eval_mini_batch_size,
                             num_workers=num_workers,
                         ),
-                        base_path / "dev_predictions.tsv",
+                        base_path,
+                        'dev_predictions.tsv'
                         embeddings_storage_mode=embeddings_storage_mode,
                         return_predictions=True
                     )
@@ -378,7 +379,8 @@ class ModelTrainer:
                             batch_size=eval_mini_batch_size,
                             num_workers=num_workers,
                         ),
-                        base_path / "test_predictions.tsv",
+                        base_path,
+                        'test_predictions.tsv',
                         embeddings_storage_mode=embeddings_storage_mode,
                         return_predictions=True
                     )

@@ -170,6 +170,7 @@ class TextClassifier(flair.nn.Model):
         self,
         data_loader: DataLoader,
         out_path: Path = None,
+        predictions_file_name: str = None,
         embeddings_storage_mode: str = "cpu",
         return_predictions: bool = False
     ) -> (Result, float, DataFrame):
@@ -281,9 +282,11 @@ class TextClassifier(flair.nn.Model):
                 detailed_results=detailed_result,
             )
 
-            if out_path is not None:
-                with open(out_path, "w", encoding="utf-8") as outfile:
-                    outfile.write("".join(lines))
+            if out_path is not None and predictions_file_name is not None:
+                predictions_file = init_output_file(out_path, predictions_file_name)
+                with open(predictions_file, "w", encoding="utf-8") as f:
+                    f.write("".join(lines))
+
 
             return result, eval_loss, predictions_tbl
 
