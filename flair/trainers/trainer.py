@@ -494,7 +494,7 @@ class ModelTrainer:
 
         return {
             "test_score": final_score,
-            "train_score_history:" train_score_history,
+            "train_score_history": train_score_history,
             "dev_score_history": dev_score_history,
             "train_loss_history": train_loss_history,
             "dev_loss_history": dev_loss_history,
