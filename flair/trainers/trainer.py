@@ -326,7 +326,7 @@ class ModelTrainer:
                 result_line: str = ""
 
                 if log_train:
-                    train_eval_result, train_loss = self.model.evaluate_n_predict(
+                    train_eval_result, train_loss, _ = self.model.evaluate_n_predict(
                         DataLoader(
                             self.corpus.train,
                             batch_size=eval_mini_batch_size,
