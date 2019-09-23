@@ -110,3 +110,4 @@ Pipfile.lock
 resources/taggers/
 regression_train/
 flair/berfu_try.py
+flair_python/
