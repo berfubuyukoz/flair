@@ -348,7 +348,7 @@ class ModelTrainer:
                             num_workers=num_workers,
                         ),
                         base_path,
-                        'dev_predictions.tsv'
+                        'dev_predictions.tsv',
                         embeddings_storage_mode=embeddings_storage_mode,
                         return_predictions=True
                     )
