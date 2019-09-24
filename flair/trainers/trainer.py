@@ -326,6 +326,7 @@ class ModelTrainer:
                 result_line: str = ""
 
                 if log_train:
+                    log.info(f"Evaling train...")
                     train_eval_result, train_loss, _ = self.model.evaluate_n_predict(
                         DataLoader(
                             self.corpus.train,
@@ -341,6 +342,7 @@ class ModelTrainer:
                     store_embeddings(self.corpus.train, embeddings_storage_mode)
 
                 if log_dev:
+                    log.info(f"Evaling dev...")
                     dev_eval_result, dev_loss, _ = self.model.evaluate_n_predict(
                         DataLoader(
                             self.corpus.dev,
@@ -373,6 +375,7 @@ class ModelTrainer:
                         )
 
                 if log_test:
+                    log.info(f"Evaling test...")
                     test_eval_result, test_loss, _ = self.model.evaluate_n_predict(
                         DataLoader(
                             self.corpus.test,
@@ -426,25 +429,25 @@ class ModelTrainer:
                             f"EPOCH\tTIMESTAMP\tBAD_EPOCHS\tLEARNING_RATE\tTRAIN_LOSS"
                         )
 
-                    if log_train:
-                        f.write(
-                            "\tTRAIN_"
-                            + "\tTRAIN_".join(
-                                train_eval_result.log_header.split("\t")
+                        if log_train:
+                            f.write(
+                                "\tTRAIN_"
+                                + "\tTRAIN_".join(
+                                    train_eval_result.log_header.split("\t")
+                                )
                             )
-                        )
-                    if log_dev:
-                        f.write(
-                            "\tDEV_LOSS\tDEV_"
-                            + "\tDEV_".join(dev_eval_result.log_header.split("\t"))
-                        )
-                    if log_test:
-                        f.write(
-                            "\tTEST_LOSS\tTEST_"
-                            + "\tTEST_".join(
-                                test_eval_result.log_header.split("\t")
+                        if log_dev:
+                            f.write(
+                                "\tDEV_LOSS\tDEV_"
+                                + "\tDEV_".join(dev_eval_result.log_header.split("\t"))
                             )
-                        )
+                        if log_test:
+                            f.write(
+                                "\tTEST_LOSS\tTEST_"
+                                + "\tTEST_".join(
+                                    test_eval_result.log_header.split("\t")
+                                )
+                            )
 
                     f.write(
                         f"\n{epoch}\t{datetime.datetime.now():%H:%M:%S}\t{bad_epochs}\t{learning_rate:.4f}\t{train_loss}"
@@ -455,6 +458,7 @@ class ModelTrainer:
                 # if checkpoint is enable, save model at each epoch
                 if checkpoint and not param_selection_mode:
                     ckpt_name = "checkpoint_"+str(epoch_nu)+".pt"
+                    log.info(f"Saving checkpoint: {ckpt_name}")
                     self.model.save_checkpoint(
                         base_path / ckpt_name,
                         optimizer.state_dict(),
