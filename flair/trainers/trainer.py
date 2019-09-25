@@ -9,7 +9,8 @@ import datetime
 import torch
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.optim.sgd import SGD
-from torch.utils.data.dataset import ConcatDataset
+#from torch.optim.adam import Adam
+from torch.utils.data.dataset import ConcatDatase
 
 try:
     from apex import amp
@@ -341,6 +342,19 @@ class ModelTrainer:
                     # depending on memory mode, embeddings are moved to CPU, GPU or deleted
                     store_embeddings(self.corpus.train, embeddings_storage_mode)
 
+                epoch_nu = epoch+1
+                # if checkpoint is enable, save model at each epoch
+                if checkpoint and not param_selection_mode:
+                    ckpt_name = "checkpoint_"+str(epoch_nu)+".pt"
+                    log.info(f"Saving checkpoint: {ckpt_name}")
+                    self.model.save_checkpoint(
+                        base_path / ckpt_name,
+                        optimizer.state_dict(),
+                        scheduler.state_dict(),
+                        epoch_nu,
+                        train_loss,
+                    )
+
                 if log_dev:
                     log.info(f"Evaling dev...")
                     dev_eval_result, dev_loss, _ = self.model.evaluate_n_predict(
@@ -454,25 +468,13 @@ class ModelTrainer:
                     )
                     f.write(result_line)
 
-                epoch_nu = epoch+1
-                # if checkpoint is enable, save model at each epoch
-                if checkpoint and not param_selection_mode:
-                    ckpt_name = "checkpoint_"+str(epoch_nu)+".pt"
-                    log.info(f"Saving checkpoint: {ckpt_name}")
-                    self.model.save_checkpoint(
-                        base_path / ckpt_name,
-                        optimizer.state_dict(),
-                        scheduler.state_dict(),
-                        epoch_nu,
-                        train_loss,
-                    )
-
                 # if we use dev data, remember best model based on dev evaluation score
                 if (
                     not train_with_dev
                     and not param_selection_mode
                     and current_score == scheduler.best
                 ):
+                    log.info("Saving best model.")
                     self.model.save(base_path / "best-model.pt")
 
             # if we do not use dev data for model selection, save final model
