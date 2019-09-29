@@ -10,7 +10,7 @@ import torch
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.optim.sgd import SGD
 #from torch.optim.adam import Adam
-from torch.utils.data.dataset import ConcatDatase
+from torch.utils.data.dataset import ConcatDataset
 
 try:
     from apex import amp
