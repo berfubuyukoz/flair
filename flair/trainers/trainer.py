@@ -86,6 +86,7 @@ class ModelTrainer:
         sampler=None,
         use_amp: bool = False,
         amp_opt_level: str = "O1",
+        finetune_embeddings: bool = False,
         **kwargs,
     ) -> dict:
         """
@@ -112,6 +113,7 @@ class ModelTrainer:
         parameter selection.
         :param num_workers: Number of workers in your data loader.
         :param sampler: You can pass a data sampler here for special sampling of data.
+        :param finetune_embeddings: Whether embeddings are finetuned or freezed. No function except logging.
         :param kwargs: Other arguments for the Optimizer
         :return:
         """
@@ -153,9 +155,7 @@ class ModelTrainer:
         log_line(log)
         if checkpointed_from is not None:
             log.info(f'Checkpointed from: "{checkpointed_from}"')
-            log_line(log)
         log.info(f'Corpus: "{self.corpus}"')
-        log_line(log)
         log.info("Parameters:")
         log.info(f' - learning_rate: "{learning_rate}"')
         log.info(f' - mini_batch_size: "{mini_batch_size}"')
@@ -164,12 +164,12 @@ class ModelTrainer:
         log.info(f' - max_epochs: "{max_epochs}"')
         log.info(f' - shuffle: "{shuffle}"')
         log.info(f' - train_with_dev: "{train_with_dev}"')
-        log_line(log)
+        log.info(f' - finetune_embeddings: "{finetune_embeddings}"')
+        log.info(f' - optimizer: "{self.optimizer}"')
         log.info(f'Model training base path: "{base_path}"')
-        log_line(log)
         log.info(f"Device: {flair.device}")
-        log_line(log)
         log.info(f"Embeddings storage mode: {embeddings_storage_mode}")
+        log_line(log)
 
         # determine what splits (train, dev, test) to evaluate and log
         log_train = True if monitor_train else False
