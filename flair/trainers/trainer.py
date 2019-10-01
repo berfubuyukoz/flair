@@ -78,7 +78,6 @@ class ModelTrainer:
         monitor_train: bool = False,
         monitor_test: bool = False,
         embeddings_storage_mode: str = "cpu",
-        checkpoint: bool = False,
         save_final_model: bool = True,
         anneal_with_restarts: bool = False,
         shuffle: bool = True,
@@ -241,10 +240,10 @@ class ModelTrainer:
                 if (
                     learning_rate != previous_learning_rate
                     and anneal_with_restarts
-                    and (base_path / "best-model.pt").exists()
+                    and (base_path / "best-checkpoint.pt").exists()
                 ):
-                    log.info("resetting to best model")
-                    self.model.load(base_path / "best-model.pt")
+                    log.info("resetting to best checkpoint")
+                    self.model.load(base_path / "best-checkpoint.pt")
 
                 previous_learning_rate = learning_rate
 
@@ -341,19 +340,6 @@ class ModelTrainer:
 
                     # depending on memory mode, embeddings are moved to CPU, GPU or deleted
                     store_embeddings(self.corpus.train, embeddings_storage_mode)
-
-                epoch_nu = epoch+1
-                # if checkpoint is enable, save model at each epoch
-                if checkpoint and not param_selection_mode:
-                    ckpt_name = "checkpoint_"+str(epoch_nu)+".pt"
-                    log.info(f"Saving checkpoint: {ckpt_name}")
-                    self.model.save_checkpoint(
-                        base_path / ckpt_name,
-                        optimizer.state_dict(),
-                        scheduler.state_dict(),
-                        epoch_nu,
-                        train_loss,
-                    )
 
                 if log_dev:
                     log.info(f"Evaling dev...")
@@ -468,18 +454,30 @@ class ModelTrainer:
                     )
                     f.write(result_line)
 
-                # if we use dev data, remember best model based on dev evaluation score
+                # if we use dev data, remember best checpoint based on dev evaluation score
                 if (
                     not train_with_dev
                     and not param_selection_mode
                     and current_score == scheduler.best
                 ):
-                    log.info("Saving best model.")
-                    self.model.save(base_path / "best-model.pt")
+                    log.info("Saving best checkpoint.")
+                    self.model.save_checkpoint(
+                        base_path / "best-checkpoint.pt",
+                        optimizer.state_dict(),
+                        scheduler.state_dict(),
+                        epoch + 1,
+                        train_loss,
+                    )
 
-            # if we do not use dev data for model selection, save final model
+            # if we do not use dev data for model selection, save final checkpoint
             if save_final_model and not param_selection_mode:
-                self.model.save(base_path / "final-model.pt")
+                self.model.save_checkpoint(
+                    base_path / "final-checkpoint.pt",
+                    optimizer.state_dict(),
+                    scheduler.state_dict(),
+                    epoch + 1,
+                    train_loss,
+                )
 
         except KeyboardInterrupt:
             log_line(log)
