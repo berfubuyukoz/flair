@@ -236,6 +236,20 @@ class ModelTrainer:
                 for group in optimizer.param_groups:
                     learning_rate = group["lr"]
 
+
+
+                # reload last best model if annealing with restarts is enabled
+                if (
+                    learning_rate != previous_learning_rate
+                ):
+                    
+                    log.info(f"lr changed. Old lr={previous_learning_rate: .4f}. New lr={learning_rate:.4f}")
+                    if (anneal_with_restarts
+                    and (base_path / "best-checkpoint.pt").exists()
+                    ):
+                        log.info("resetting to best checkpoint")
+                        self.model.load(base_path / "best-checkpoint.pt")
+
                 # reload last best model if annealing with restarts is enabled
                 if (
                     learning_rate != previous_learning_rate
