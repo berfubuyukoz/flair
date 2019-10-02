@@ -243,7 +243,7 @@ class ModelTrainer:
                     learning_rate != previous_learning_rate
                 ):
                     
-                    log.info(f"lr changed. Old lr={previous_learning_rate: .4f}. New lr={learning_rate:.4f}")
+                    log.info(f"lr changed. Old lr={previous_learning_rate: .6f}. New lr={learning_rate:.6f}")
                     if (anneal_with_restarts
                     and (base_path / "best-checkpoint.pt").exists()
                     ):
@@ -327,7 +327,7 @@ class ModelTrainer:
 
                 log_line(log)
                 log.info(
-                    f"EPOCH {epoch + 1} done: loss {train_loss:.4f} - lr {learning_rate:.4f}"
+                    f"EPOCH {epoch + 1} done: loss {train_loss:.6f} - lr {learning_rate:.6f}"
                 )
 
                 if self.use_tensorboard:
@@ -464,7 +464,7 @@ class ModelTrainer:
                             )
 
                     f.write(
-                        f"\n{epoch}\t{datetime.datetime.now():%H:%M:%S}\t{bad_epochs}\t{learning_rate:.4f}\t{train_loss}"
+                        f"\n{epoch}\t{datetime.datetime.now():%H:%M:%S}\t{bad_epochs}\t{learning_rate:.6f}\t{train_loss}"
                     )
                     f.write(result_line)
 
