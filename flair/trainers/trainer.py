@@ -159,16 +159,17 @@ class ModelTrainer:
         log.info("Parameters:")
         log.info(f' - learning_rate: "{learning_rate}"')
         log.info(f' - mini_batch_size: "{mini_batch_size}"')
-        log.info(f' - patience: "{patience}"')
+        log.info(f' - patience: "{patience}"') 
+        log.info(f' - anneal_with_restarts: "{anneal_with_restarts}"') 
         log.info(f' - anneal_factor: "{anneal_factor}"')
         log.info(f' - max_epochs: "{max_epochs}"')
         log.info(f' - shuffle: "{shuffle}"')
         log.info(f' - train_with_dev: "{train_with_dev}"')
         log.info(f' - finetune_embeddings: "{finetune_embeddings}"')
         log.info(f' - optimizer: "{self.optimizer}"')
-        log.info(f'Model training base path: "{base_path}"')
-        log.info(f"Device: {flair.device}")
-        log.info(f"Embeddings storage mode: {embeddings_storage_mode}")
+        log.info(f' - training base path: "{base_path}"')
+        log.info(f' - device: "{flair.device}"')
+        log.info(f' - embeddings_storage_mode: "{embeddings_storage_mode}"')
         log_line(log)
 
         # determine what splits (train, dev, test) to evaluate and log
@@ -243,21 +244,12 @@ class ModelTrainer:
                     learning_rate != previous_learning_rate
                 ):
                     
-                    log.info(f"lr changed. Old lr={previous_learning_rate: .6f}. New lr={learning_rate:.6f}")
+                    log.info(f"Patience limit reached. lr changed from {previous_learning_rate: .6f} to {learning_rate:.6f}")
                     if (anneal_with_restarts
                     and (base_path / "best-checkpoint.pt").exists()
                     ):
                         log.info("resetting to best checkpoint")
                         self.model.load(base_path / "best-checkpoint.pt")
-
-                # reload last best model if annealing with restarts is enabled
-                if (
-                    learning_rate != previous_learning_rate
-                    and anneal_with_restarts
-                    and (base_path / "best-checkpoint.pt").exists()
-                ):
-                    log.info("resetting to best checkpoint")
-                    self.model.load(base_path / "best-checkpoint.pt")
 
                 previous_learning_rate = learning_rate
 
