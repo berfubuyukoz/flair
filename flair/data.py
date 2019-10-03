@@ -971,7 +971,11 @@ class Corpus:
         return class_to_count
 
     def get_all_sentences(self) -> Dataset:
-        return ConcatDataset([self.train, self.dev, self.test])
+        non_none_datasets = []
+        if self.train is not None: non_none_datasets.append(self.train)
+        if self.dev is not None: non_none_datasets.append(self.dev)
+        if self.test is not None: non_none_datasets.append(self.test)
+        return ConcatDataset(non_none_datasets)
 
     def make_tag_dictionary(self, tag_type: str) -> Dictionary:
 
