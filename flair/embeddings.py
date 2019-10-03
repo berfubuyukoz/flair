@@ -2685,7 +2685,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
         dropout: float = 0.5,
         word_dropout: float = 0.0,
         locked_dropout: float = 0.0,
-        rnn_type="GRU",
+        rnn_type="LSTM",
     ):
         """The constructor takes a list of embeddings to be combined.
         :param embeddings: a list of token embeddings
