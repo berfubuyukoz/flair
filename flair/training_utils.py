@@ -367,7 +367,7 @@ def store_embeddings(sentences: List[Sentence], storage_mode: str):
             if sentences[0][0]._embeddings[name].requires_grad:
                 delete_keys.append(name)
 
-        # find out which ones are dynamic embeddings
+        # delete dynamic embeddings.
         for sentence in sentences:
             sentence.clear_embeddings(delete_keys)
 
