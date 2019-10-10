@@ -11,6 +11,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.optim.sgd import SGD
 #from torch.optim.adam import Adam
 from torch.utils.data.dataset import ConcatDataset
+from torch.utils.data.sampler import SequentialSampler
 
 try:
     from apex import amp
@@ -63,6 +64,18 @@ class ModelTrainer:
         self.optimizer_state: dict = optimizer_state
         self.use_tensorboard: bool = use_tensorboard
 
+    def _get_permuted_dataset(data,perm):
+        permuted = []
+        if data.in_memory:
+            # shuffle sentences list wrt perm
+            permuted = [data.sentences[i] for i in perm]
+            data.sentences = permuted
+        else:
+            # shuffle indices list wrt perm
+            permuted = [data.indices[i] for i in perm]
+            data.indices = permuted
+        return data
+
     def train(
         self,
         base_path: Union[Path, str],
@@ -80,10 +93,10 @@ class ModelTrainer:
         embeddings_storage_mode: str = "cpu",
         save_final_model: bool = True,
         anneal_with_restarts: bool = False,
-        shuffle: bool = True,
+        shuffle: bool = False,
         param_selection_mode: bool = False,
         num_workers: int = 6,
-        sampler=None,
+        sampler: torch.utils.data.sampler = SequentialSampler,
         use_amp: bool = False,
         amp_opt_level: str = "O1",
         finetune_embeddings: bool = False,
@@ -217,6 +230,8 @@ class ModelTrainer:
         if train_with_dev:
             train_data = ConcatDataset([self.corpus.train, self.corpus.dev])
 
+        train_size = len(train_data.sentences) if train_data.in_memory else len(train_data.indices)
+        
         if sampler is not None:
             sampler = sampler(train_data)
             shuffle = False
@@ -259,6 +274,14 @@ class ModelTrainer:
                     log.info("learning rate too small - quitting training!")
                     log_line(log)
                     break
+
+
+                #Explicit random sampling code borrowed from torch RandomSampler and generator added.
+                #To get the same permutation of train data @ epoch'th epoch for all models I compare.
+                gen = torch.manual_seed(epoch)
+                perm = torch.randperm(
+                train_size, generator=gen)
+                train_data = _get_permuted_dataset(train_data,perm)b
 
                 batch_loader = DataLoader(
                     train_data,
